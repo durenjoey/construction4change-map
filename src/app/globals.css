@@ -131,5 +131,17 @@
 }
 
 .mapboxgl-ctrl-attrib {
-  font-size: 10px !important;
+  display: none !important;
+}
+
+.mapboxgl-ctrl-logo {
+  display: none !important;
+}
+
+.mapboxgl-ctrl-bottom-left {
+  display: none !important;
+}
+
+.mapboxgl-ctrl-bottom-right .mapboxgl-ctrl-attrib {
+  display: none !important;
 }

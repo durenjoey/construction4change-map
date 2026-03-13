@@ -54,7 +54,7 @@ export function ProjectMap({ projects }: ProjectMapProps) {
     return matchesType && matchesSearch;
   });
 
-  const totalProjects = projects.length;
+  const totalProjects = mappableProjects.length;
   const countries = new Set(projects.map((p) => p.country).filter(Boolean)).size;
   const years = projects.filter((p) => p.startYear).map((p) => p.startYear!);
   const yearRange = years.length
@@ -269,6 +269,8 @@ export function ProjectMap({ projects }: ProjectMapProps) {
       dragRotate: false,
       touchZoomRotate: false,
       doubleClickZoom: false,
+      attributionControl: false,
+      logoPosition: "bottom-left",
     });
 
     mapInstance.addControl(
@@ -633,12 +635,12 @@ export function ProjectMap({ projects }: ProjectMapProps) {
           </button>
         )}
 
-        {/* Color legend — collapsible */}
+        {/* Color legend — collapsible, top-right */}
         <div
           style={{
             position: "absolute",
-            bottom: 30,
-            left: 16,
+            top: 12,
+            right: 50,
             zIndex: 5,
           }}
         >
