@@ -110,6 +110,10 @@
   }
 }
 
+/* Hide scrollbar for filter bar */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
 /* Mapbox overrides */
 .mapboxgl-popup-content {
   padding: 0 !important;

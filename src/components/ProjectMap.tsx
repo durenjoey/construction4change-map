@@ -38,6 +38,8 @@ export function ProjectMap({ projects }: ProjectMapProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("space");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [mapInteractive, setMapInteractive] = useState(false);
+  const [legendOpen, setLegendOpen] = useState(false);
   const prevStyleRef = useRef<string>("mapbox://styles/mapbox/light-v11");
 
   const mappableProjects = projects.filter((p) => p.lat && p.lng);
@@ -262,6 +264,11 @@ export function ProjectMap({ projects }: ProjectMapProps) {
       minZoom: 1.5,
       maxZoom: 15,
       projection: "globe",
+      scrollZoom: false,
+      dragPan: false,
+      dragRotate: false,
+      touchZoomRotate: false,
+      doubleClickZoom: false,
     });
 
     mapInstance.addControl(
@@ -280,7 +287,8 @@ export function ProjectMap({ projects }: ProjectMapProps) {
     ["mousedown", "touchstart", "wheel", "dblclick"].forEach((evt) => {
       mapInstance.on(evt as any, () => {
         stopSpin();
-        scheduleResume();
+        // Only auto-resume spin if map is not in interactive mode
+        if (!mapInteractive) scheduleResume();
       });
     });
 
@@ -383,7 +391,7 @@ export function ProjectMap({ projects }: ProjectMapProps) {
             alt="Construction for Change"
             width={140}
             height={140}
-            style={{ objectFit: "contain" }}
+            style={{ objectFit: "contain", maxHeight: "60px", width: "auto" }}
           />
           {/* View mode toggle */}
           <div
@@ -538,30 +546,162 @@ export function ProjectMap({ projects }: ProjectMapProps) {
           style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
         />
 
-        {/* Color legend */}
+        {/* Click to interact overlay */}
+        {!mapInteractive && (
+          <div
+            onClick={() => {
+              setMapInteractive(true);
+              if (map.current) {
+                map.current.scrollZoom.enable();
+                map.current.dragPan.enable();
+                map.current.dragRotate.enable();
+                map.current.touchZoomRotate.enable();
+                map.current.doubleClickZoom.enable();
+              }
+            }}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 4,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              pointerEvents: "auto",
+            }}
+          >
+            <div
+              style={{
+                background: isDarkMap ? "rgba(0,0,0,0.6)" : "rgba(55,72,89,0.6)",
+                color: "white",
+                padding: "12px 24px",
+                borderRadius: "9999px",
+                fontSize: "14px",
+                fontWeight: 600,
+                backdropFilter: "blur(4px)",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
+              }}
+            >
+              <Globe size={18} />
+              Click to explore the map
+            </div>
+          </div>
+        )}
+
+        {/* Deactivate button */}
+        {mapInteractive && (
+          <button
+            onClick={() => {
+              setMapInteractive(false);
+              if (map.current) {
+                map.current.scrollZoom.disable();
+                map.current.dragPan.disable();
+                map.current.dragRotate.disable();
+                map.current.touchZoomRotate.disable();
+                map.current.doubleClickZoom.disable();
+              }
+              scheduleResume(1000);
+            }}
+            style={{
+              position: "absolute",
+              top: 12,
+              left: 12,
+              zIndex: 6,
+              background: isDarkMap ? "rgba(0,0,0,0.7)" : "rgba(55,72,89,0.7)",
+              color: "white",
+              padding: "8px 16px",
+              borderRadius: "9999px",
+              fontSize: "12px",
+              fontWeight: 600,
+              border: "none",
+              cursor: "pointer",
+              backdropFilter: "blur(4px)",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
+            }}
+          >
+            <X size={14} />
+            Exit map
+          </button>
+        )}
+
+        {/* Color legend — collapsible */}
         <div
           style={{
             position: "absolute",
             bottom: 30,
             left: 16,
-            background: isDarkMap ? "rgba(20,20,35,0.9)" : "rgba(255,255,255,0.92)",
-            borderRadius: "10px",
-            padding: "12px 16px",
-            boxShadow: "0 2px 12px rgba(0,0,0,0.15)",
-            border: `1px solid ${isDarkMap ? "#444" : "#d6d6d6"}`,
             zIndex: 5,
-            backdropFilter: "blur(8px)",
           }}
         >
-          <div style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1.5px", color: isDarkMap ? "#aaa" : "#999", marginBottom: "8px" }}>
-            Project Types
-          </div>
-          {Object.entries(TYPE_COLORS).map(([type, color]) => (
-            <div key={type} style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-              <span style={{ width: 10, height: 10, borderRadius: "50%", background: color, display: "inline-block", border: isDarkMap ? "1px solid rgba(255,255,255,0.2)" : "none" }} />
-              <span style={{ fontSize: "11px", color: isDarkMap ? "#ccc" : "#374859" }}>{type}</span>
+          {legendOpen ? (
+            <div
+              style={{
+                background: isDarkMap ? "rgba(20,20,35,0.92)" : "rgba(255,255,255,0.94)",
+                borderRadius: "10px",
+                padding: "12px 16px",
+                boxShadow: "0 2px 12px rgba(0,0,0,0.15)",
+                border: `1px solid ${isDarkMap ? "#444" : "#d6d6d6"}`,
+                backdropFilter: "blur(8px)",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: "8px",
+                  cursor: "pointer",
+                }}
+                onClick={() => setLegendOpen(false)}
+              >
+                <span style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1.5px", color: isDarkMap ? "#aaa" : "#999" }}>
+                  Project Types
+                </span>
+                <X size={12} style={{ color: isDarkMap ? "#aaa" : "#999" }} />
+              </div>
+              {Object.entries(TYPE_COLORS).map(([type, color]) => (
+                <div key={type} style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                  <span style={{ width: 10, height: 10, borderRadius: "50%", background: color, display: "inline-block", flexShrink: 0, border: isDarkMap ? "1px solid rgba(255,255,255,0.2)" : "none" }} />
+                  <span style={{ fontSize: "11px", color: isDarkMap ? "#ccc" : "#374859" }}>{type}</span>
+                </div>
+              ))}
             </div>
-          ))}
+          ) : (
+            <button
+              onClick={() => setLegendOpen(true)}
+              style={{
+                background: isDarkMap ? "rgba(20,20,35,0.9)" : "rgba(255,255,255,0.92)",
+                borderRadius: "9999px",
+                padding: "8px 14px",
+                boxShadow: "0 2px 12px rgba(0,0,0,0.15)",
+                border: `1px solid ${isDarkMap ? "#444" : "#d6d6d6"}`,
+                backdropFilter: "blur(8px)",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                fontSize: "11px",
+                fontWeight: 600,
+                color: isDarkMap ? "#ccc" : "#374859",
+              }}
+            >
+              <div style={{ display: "flex", gap: "3px" }}>
+                {Object.values(TYPE_COLORS).slice(0, 4).map((c, i) => (
+                  <span key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: c, display: "inline-block" }} />
+                ))}
+              </div>
+              Legend
+            </button>
+          )}
         </div>
       </div>
     </div>
