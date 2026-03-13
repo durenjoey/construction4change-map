@@ -38,8 +38,10 @@ export function ProjectMap({ projects }: ProjectMapProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("space");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
-  const [mapInteractive, setMapInteractive] = useState(false);
-  const [legendOpen, setLegendOpen] = useState(false);
+  const [mapInteractive, setMapInteractive] = useState(true);
+  const [legendOpen, setLegendOpen] = useState(
+    typeof window !== "undefined" ? window.innerWidth >= 768 : true
+  );
   const prevStyleRef = useRef<string>("mapbox://styles/mapbox/light-v11");
 
   const mappableProjects = projects.filter((p) => p.lat && p.lng);
@@ -124,7 +126,7 @@ export function ProjectMap({ projects }: ProjectMapProps) {
 
   function setupLayers(mapInstance: mapboxgl.Map) {
     // Remove old layers/source if they exist
-    ["project-pins", "project-pins-hover"].forEach((id) => {
+    ["cluster-count", "clusters", "project-pins", "project-pins-hover"].forEach((id) => {
       if (mapInstance.getLayer(id)) mapInstance.removeLayer(id);
     });
     if (mapInstance.getSource("projects")) mapInstance.removeSource("projects");
@@ -132,6 +134,42 @@ export function ProjectMap({ projects }: ProjectMapProps) {
     mapInstance.addSource("projects", {
       type: "geojson",
       data: buildGeoJSON(filteredProjects),
+      cluster: true,
+      clusterMaxZoom: 7,
+      clusterRadius: 25,
+    });
+
+    // Cluster dots — subtle, same style as pins just slightly bigger
+    mapInstance.addLayer({
+      id: "clusters",
+      type: "circle",
+      source: "projects",
+      filter: ["has", "point_count"],
+      paint: {
+        "circle-color": isDarkMap ? "#cb463a" : "#cb463a",
+        "circle-radius": [
+          "step", ["get", "point_count"],
+          12, 3, 15, 8, 18, 15, 22,
+        ],
+        "circle-stroke-width": 2,
+        "circle-stroke-color": isDarkMap ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.8)",
+        "circle-opacity": 0.85,
+      },
+    });
+
+    // Cluster count label
+    mapInstance.addLayer({
+      id: "cluster-count",
+      type: "symbol",
+      source: "projects",
+      filter: ["has", "point_count"],
+      layout: {
+        "text-field": ["get", "point_count_abbreviated"],
+        "text-size": 11,
+      },
+      paint: {
+        "text-color": "#ffffff",
+      },
     });
 
     // Individual pins — scale with zoom
@@ -139,6 +177,7 @@ export function ProjectMap({ projects }: ProjectMapProps) {
       id: "project-pins",
       type: "circle",
       source: "projects",
+      filter: ["!", ["has", "point_count"]],
       paint: {
         "circle-radius": [
           "interpolate", ["linear"], ["zoom"],
@@ -191,6 +230,25 @@ export function ProjectMap({ projects }: ProjectMapProps) {
       mapInstance.setFilter("project-pins-hover", ["==", "idx", -1]);
     });
 
+    // Cluster hover + click to zoom
+    mapInstance.on("mouseenter", "clusters", () => {
+      mapInstance.getCanvas().style.cursor = "pointer";
+    });
+    mapInstance.on("mouseleave", "clusters", () => {
+      mapInstance.getCanvas().style.cursor = "";
+    });
+    mapInstance.on("click", "clusters", (e) => {
+      const features = mapInstance.queryRenderedFeatures(e.point, { layers: ["clusters"] });
+      if (!features.length) return;
+      const clusterId = features[0].properties!.cluster_id;
+      const source = mapInstance.getSource("projects") as mapboxgl.GeoJSONSource;
+      const coords = (features[0].geometry as GeoJSON.Point).coordinates as [number, number];
+      source.getClusterExpansionZoom(clusterId, (err, zoom) => {
+        if (err || zoom == null) return;
+        mapInstance.flyTo({ center: coords, zoom: zoom + 1, duration: 500 });
+      });
+    });
+
     // Click pin
     mapInstance.on("click", "project-pins", (e) => {
       if (!e.features?.length) return;
@@ -236,7 +294,7 @@ export function ProjectMap({ projects }: ProjectMapProps) {
 
     // Click empty → close popup
     mapInstance.on("click", (e) => {
-      const pins = mapInstance.queryRenderedFeatures(e.point, { layers: ["project-pins"] });
+      const pins = mapInstance.queryRenderedFeatures(e.point, { layers: ["project-pins", "clusters"] });
       if (!pins.length && popupRef.current) {
         popupRef.current.remove();
         popupRef.current = null;
@@ -264,11 +322,11 @@ export function ProjectMap({ projects }: ProjectMapProps) {
       minZoom: 1.5,
       maxZoom: 15,
       projection: "globe",
-      scrollZoom: false,
-      dragPan: false,
-      dragRotate: false,
-      touchZoomRotate: false,
-      doubleClickZoom: false,
+      scrollZoom: true,
+      dragPan: true,
+      dragRotate: true,
+      touchZoomRotate: true,
+      doubleClickZoom: true,
       attributionControl: false,
       logoPosition: "bottom-left",
     });
@@ -389,7 +447,7 @@ export function ProjectMap({ projects }: ProjectMapProps) {
           }}
         >
           <Image
-            src="/cfc-logo.webp"
+            src="/cfc-logo.png"
             alt="Construction for Change"
             width={140}
             height={140}
@@ -440,7 +498,6 @@ export function ProjectMap({ projects }: ProjectMapProps) {
           <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
             <StatBadge icon={<Building2 size={16} color="#cb463a" />} value={totalProjects} label="Projects" textColor={headerText} mutedColor={headerMuted} />
             <StatBadge icon={<Globe size={16} color="#cb463a" />} value={countries} label="Countries" textColor={headerText} mutedColor={headerMuted} />
-            <StatBadge icon={<Calendar size={16} color="#cb463a" />} value={yearRange} textColor={headerText} mutedColor={headerMuted} />
             {/* Search toggle */}
             <button
               onClick={() => { setSearchOpen(!searchOpen); if (searchOpen) setSearchQuery(""); }}
@@ -547,93 +604,6 @@ export function ProjectMap({ projects }: ProjectMapProps) {
           ref={mapContainer}
           style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
         />
-
-        {/* Click to interact overlay */}
-        {!mapInteractive && (
-          <div
-            onClick={() => {
-              setMapInteractive(true);
-              if (map.current) {
-                map.current.scrollZoom.enable();
-                map.current.dragPan.enable();
-                map.current.dragRotate.enable();
-                map.current.touchZoomRotate.enable();
-                map.current.doubleClickZoom.enable();
-              }
-            }}
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              zIndex: 4,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              pointerEvents: "auto",
-            }}
-          >
-            <div
-              style={{
-                background: isDarkMap ? "rgba(0,0,0,0.6)" : "rgba(55,72,89,0.6)",
-                color: "white",
-                padding: "12px 24px",
-                borderRadius: "9999px",
-                fontSize: "14px",
-                fontWeight: 600,
-                backdropFilter: "blur(4px)",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
-              }}
-            >
-              <Globe size={18} />
-              Click to explore the map
-            </div>
-          </div>
-        )}
-
-        {/* Deactivate button */}
-        {mapInteractive && (
-          <button
-            onClick={() => {
-              setMapInteractive(false);
-              if (map.current) {
-                map.current.scrollZoom.disable();
-                map.current.dragPan.disable();
-                map.current.dragRotate.disable();
-                map.current.touchZoomRotate.disable();
-                map.current.doubleClickZoom.disable();
-              }
-              scheduleResume(1000);
-            }}
-            style={{
-              position: "absolute",
-              top: 12,
-              left: 12,
-              zIndex: 6,
-              background: isDarkMap ? "rgba(0,0,0,0.7)" : "rgba(55,72,89,0.7)",
-              color: "white",
-              padding: "8px 16px",
-              borderRadius: "9999px",
-              fontSize: "12px",
-              fontWeight: 600,
-              border: "none",
-              cursor: "pointer",
-              backdropFilter: "blur(4px)",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
-            }}
-          >
-            <X size={14} />
-            Exit map
-          </button>
-        )}
 
         {/* Color legend — collapsible, top-right */}
         <div

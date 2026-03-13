@@ -26,7 +26,7 @@ export const PROJECT_TYPES = [
 export type ProjectType = (typeof PROJECT_TYPES)[number];
 
 export const TYPE_COLORS: Record<string, string> = {
-  Healthcare: "#cb463a",
+  Healthcare: "#e8872e",
   Education: "#374859",
   Housing: "#901a1d",
   Solar: "#a39965",
