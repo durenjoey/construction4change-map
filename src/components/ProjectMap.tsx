@@ -10,7 +10,7 @@ import {
   getTypeColor,
 } from "@/lib/types";
 import Image from "next/image";
-import { Building2, Globe, Calendar } from "lucide-react";
+import { Building2, Globe, Calendar, Map } from "lucide-react";
 
 interface ProjectMapProps {
   projects: Project[];
@@ -25,6 +25,7 @@ export function ProjectMap({ projects }: ProjectMapProps) {
   const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [activeFilter, setActiveFilter] = useState<ProjectType>("All");
   const [mapReady, setMapReady] = useState(false);
+  const [isGlobe, setIsGlobe] = useState(true);
 
   const mappableProjects = projects.filter((p) => p.lat && p.lng);
   const filteredProjects =
@@ -114,7 +115,7 @@ export function ProjectMap({ projects }: ProjectMapProps) {
       zoom: 2,
       minZoom: 1.5,
       maxZoom: 15,
-      projection: "mercator",
+      projection: "globe",
     });
 
     mapInstance.addControl(
@@ -123,6 +124,15 @@ export function ProjectMap({ projects }: ProjectMapProps) {
     );
 
     mapInstance.on("load", () => {
+      // Globe atmosphere
+      mapInstance.setFog({
+        color: "rgb(255, 255, 255)",
+        "high-color": "rgb(200, 210, 220)",
+        "horizon-blend": 0.05,
+        "space-color": "rgb(220, 225, 230)",
+        "star-intensity": 0,
+      });
+
       // Add source
       mapInstance.addSource("projects", {
         type: "geojson",
@@ -272,6 +282,23 @@ export function ProjectMap({ projects }: ProjectMapProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeFilter, mapReady]);
 
+  // Toggle projection
+  useEffect(() => {
+    if (!map.current || !mapReady) return;
+    map.current.setProjection(isGlobe ? "globe" : "mercator");
+    if (isGlobe) {
+      map.current.setFog({
+        color: "rgb(255, 255, 255)",
+        "high-color": "rgb(200, 210, 220)",
+        "horizon-blend": 0.05,
+        "space-color": "rgb(220, 225, 230)",
+        "star-intensity": 0,
+      });
+    } else {
+      map.current.setFog({} as any);
+    }
+  }, [isGlobe, mapReady]);
+
   const filterCounts = PROJECT_TYPES.map((type) => ({
     type,
     count:
@@ -306,39 +333,13 @@ export function ProjectMap({ projects }: ProjectMapProps) {
             gap: "12px",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-            <Image
-              src="/cfc-logo.webp"
-              alt="Construction for Change"
-              width={44}
-              height={44}
-              style={{ objectFit: "contain" }}
-            />
-            <div>
-              <h1
-                style={{
-                  fontSize: "20px",
-                  fontWeight: 900,
-                  color: "#374859",
-                  letterSpacing: "1px",
-                  margin: 0,
-                }}
-              >
-                CONSTRUCTION FOR CHANGE
-              </h1>
-              <p
-                style={{
-                  fontSize: "11px",
-                  color: "#999",
-                  letterSpacing: "2px",
-                  textTransform: "uppercase",
-                  margin: "2px 0 0",
-                }}
-              >
-                Global Project Map
-              </p>
-            </div>
-          </div>
+          <Image
+            src="/cfc-logo.webp"
+            alt="Construction for Change"
+            width={44}
+            height={44}
+            style={{ objectFit: "contain" }}
+          />
           <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
             <StatBadge
               icon={<Building2 size={16} color="#cb463a" />}
@@ -354,6 +355,28 @@ export function ProjectMap({ projects }: ProjectMapProps) {
               icon={<Calendar size={16} color="#cb463a" />}
               value={yearRange}
             />
+            {/* Globe / Flat toggle */}
+            <button
+              onClick={() => setIsGlobe(!isGlobe)}
+              title={isGlobe ? "Switch to flat map" : "Switch to globe"}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "5px 12px",
+                borderRadius: "9999px",
+                fontSize: "12px",
+                fontWeight: 600,
+                border: "1px solid #d6d6d6",
+                background: "white",
+                color: "#374859",
+                cursor: "pointer",
+                transition: "all 0.15s",
+              }}
+            >
+              {isGlobe ? <Map size={14} /> : <Globe size={14} />}
+              {isGlobe ? "Flat" : "Globe"}
+            </button>
           </div>
         </div>
       </div>
