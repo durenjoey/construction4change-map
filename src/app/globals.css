@@ -115,6 +115,45 @@
   50% { transform: translateY(6px); opacity: 1; }
 }
 
+/* Hero button hover states */
+.cfc-btn-primary {
+  background: #cb463a;
+  color: white;
+  padding: 14px 32px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-decoration: none;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+  display: inline-block;
+}
+.cfc-btn-primary:hover {
+  background: #e05a50;
+  transform: scale(1.05);
+  box-shadow: 0 6px 24px rgba(203, 70, 58, 0.5);
+}
+
+.cfc-btn-secondary {
+  background: #174258;
+  color: white;
+  padding: 14px 32px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-decoration: none;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+  display: inline-block;
+}
+.cfc-btn-secondary:hover {
+  background: #1f5a78;
+  transform: scale(1.05);
+  box-shadow: 0 6px 24px rgba(23, 66, 88, 0.5);
+}
+
 /* Hide scrollbar for filter bar */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

@@ -453,48 +453,6 @@ export function ProjectMap({ projects }: ProjectMapProps) {
             height={140}
             style={{ objectFit: "contain", maxHeight: "60px", width: "auto" }}
           />
-          {/* View mode toggle */}
-          <div
-            style={{
-              display: "flex",
-              background: isDark ? "#2a2a3e" : "#f0f0f0",
-              borderRadius: "9999px",
-              padding: "3px",
-              transition: "background 0.3s",
-            }}
-          >
-            {([
-              { mode: "space" as ViewMode, icon: <Earth size={15} />, label: "Earth" },
-              { mode: "globe" as ViewMode, icon: <Sun size={15} />, label: "Light" },
-              { mode: "flat" as ViewMode, icon: <Map size={15} />, label: "Flat" },
-              { mode: "dark" as ViewMode, icon: <Moon size={15} />, label: "Dark" },
-            ]).map(({ mode, icon, label }) => (
-              <button
-                key={mode}
-                onClick={() => setViewMode(mode)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "5px",
-                  padding: "8px 16px",
-                  borderRadius: "9999px",
-                  fontSize: "13px",
-                  fontWeight: 700,
-                  border: "none",
-                  background:
-                    viewMode === mode
-                      ? mode === "dark" ? "#cb463a" : "#374859"
-                      : "transparent",
-                  color: viewMode === mode ? "white" : isDark ? "#888" : "#999",
-                  cursor: "pointer",
-                  transition: "all 0.2s",
-                }}
-              >
-                {icon}
-                {label}
-              </button>
-            ))}
-          </div>
           <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
             <StatBadge icon={<Building2 size={16} color="#cb463a" />} value={totalProjects} label="Projects" textColor={headerText} mutedColor={headerMuted} />
             <StatBadge icon={<Globe size={16} color="#cb463a" />} value={countries} label="Countries" textColor={headerText} mutedColor={headerMuted} />

@@ -29,10 +29,9 @@ const SECTIONS: Section[] = [
       "star-intensity": 0.8,
     },
     pinColor: "brand",
-    title: "BUILDING FOR COMMUNITIES WORLDWIDE",
-    subtitle: "Construction for Change",
-    description:
-      "Since 2008, we have partnered with organizations across 22 countries to deliver schools, clinics, and community infrastructure where it is needed most.",
+    title: "CONSTRUCTION FOR CHANGE",
+    subtitle: "",
+    description: "Scroll down to see different views",
   },
   {
     id: "earth",
@@ -46,10 +45,10 @@ const SECTIONS: Section[] = [
       "star-intensity": 0.8,
     },
     pinColor: "typed",
-    title: "129 PROJECTS DELIVERED",
-    subtitle: "Earth View",
+    title: "EARTH VIEW",
+    subtitle: "Satellite Globe",
     description:
-      "From health clinics in rural Togo to solar installations across Puerto Rico, every pin represents a community transformed through better infrastructure.",
+      "Real satellite imagery with your projects color-coded by type. Healthcare, education, housing, solar — each category has its own color so visitors can see the breadth of your work at a glance.",
   },
   {
     id: "light",
@@ -63,21 +62,10 @@ const SECTIONS: Section[] = [
       "star-intensity": 0,
     },
     pinColor: "typed",
-    title: "23 COUNTRIES",
-    subtitle: "Light View",
+    title: "LIGHT VIEW",
+    subtitle: "Clean Globe",
     description:
-      "Our work spans Africa, Asia, the Caribbean, and the Americas. We bring professional construction management to organizations that build schools, clinics, and community centers.",
-  },
-  {
-    id: "flat",
-    style: "mapbox://styles/mapbox/light-v11",
-    projection: "mercator",
-    fog: null,
-    pinColor: "typed",
-    title: "HEALTHCARE, EDUCATION, HOUSING & MORE",
-    subtitle: "Flat View",
-    description:
-      "49 healthcare facilities. 30 education buildings. 17 housing projects. 16 solar installations. Each one built to last, designed with the community, managed with care.",
+      "A minimal, clean globe that puts the focus on the project pins. No visual noise — just your locations on a white canvas. Great for presentations and embedding on a light-themed website.",
   },
   {
     id: "dark",
@@ -91,10 +79,32 @@ const SECTIONS: Section[] = [
       "star-intensity": 0.8,
     },
     pinColor: "typed",
-    title: "THE WORK CONTINUES",
-    subtitle: "Dark View",
+    title: "DARK VIEW",
+    subtitle: "Night Mode",
     description:
-      "With active projects across multiple continents, we are always building. Explore the interactive map below to see where we have been and where we are going.",
+      "A dramatic dark theme with stars. The project pins pop against the dark background, making each location stand out. Ideal for high-contrast presentations and evening browsing.",
+  },
+  {
+    id: "flat",
+    style: "mapbox://styles/mapbox/light-v11",
+    projection: "mercator",
+    fog: null,
+    pinColor: "typed",
+    title: "FLAT VIEW",
+    subtitle: "Traditional Map",
+    description:
+      "A standard flat map projection for when you need a familiar, straightforward layout. Easy to read, easy to navigate. Best for zooming into specific regions and seeing project density.",
+  },
+  {
+    id: "nautical",
+    style: "mapbox://styles/mapbox/outdoors-v12",
+    projection: "mercator",
+    fog: null,
+    pinColor: "typed",
+    title: "NAUTICAL VIEW",
+    subtitle: "Terrain & Outdoors",
+    description:
+      "A topographic style showing terrain, elevation, and natural features. Perfect for showcasing projects in remote or rural areas where geography tells part of the story.",
   },
 ];
 
@@ -155,11 +165,19 @@ export function ScrollShowcase({ projects }: ScrollShowcaseProps) {
     });
   }
 
+  function stopSpin() {
+    if (spinFrameRef.current) {
+      cancelAnimationFrame(spinFrameRef.current);
+      spinFrameRef.current = null;
+    }
+  }
+
   function startSpin() {
+    stopSpin();
     const spin = () => {
       if (!map.current) return;
       const center = map.current.getCenter();
-      center.lng += 0.008;
+      center.lng += 0.025;
       map.current.jumpTo({ center });
       spinFrameRef.current = requestAnimationFrame(spin);
     };
@@ -182,6 +200,7 @@ export function ScrollShowcase({ projects }: ScrollShowcaseProps) {
         if (section.fog) m.setFog(section.fog);
         else m.setFog({} as any);
         setupPins(m, section.pinColor);
+        startSpin();
       });
     } else {
       m.setProjection(section.projection);
@@ -191,6 +210,7 @@ export function ScrollShowcase({ projects }: ScrollShowcaseProps) {
       // Update pin colors if needed
       const source = m.getSource("showcase") as mapboxgl.GeoJSONSource;
       if (source) source.setData(buildGeoJSON(section.pinColor));
+      startSpin();
     }
   }
 
@@ -272,13 +292,13 @@ export function ScrollShowcase({ projects }: ScrollShowcaseProps) {
           left: 20,
           zIndex: 10,
           cursor: "pointer",
-          filter: "drop-shadow(0 0 12px rgba(255,255,255,0.4)) drop-shadow(0 0 30px rgba(255,255,255,0.15))",
+          filter: "drop-shadow(0 0 10px rgba(255,255,255,1)) drop-shadow(0 0 25px rgba(255,255,255,0.8)) drop-shadow(0 0 50px rgba(255,255,255,0.6)) drop-shadow(0 0 80px rgba(255,255,255,0.4))",
         }}
       >
         <img
           src="/cfc-logo.png"
           alt="Construction for Change"
-          style={{ width: "70px", height: "auto" }}
+          style={{ width: "140px", height: "auto" }}
         />
       </a>
 
@@ -322,7 +342,7 @@ export function ScrollShowcase({ projects }: ScrollShowcaseProps) {
               right: 0,
               bottom: 0,
               background:
-                section.id === "light" || section.id === "flat"
+                section.id === "light" || section.id === "flat" || section.id === "nautical"
                   ? "rgba(255,255,255,0.35)"
                   : "rgba(5, 5, 20, 0.4)",
               zIndex: 0,
@@ -341,22 +361,25 @@ export function ScrollShowcase({ projects }: ScrollShowcaseProps) {
               transition: "opacity 0.6s ease, transform 0.6s ease",
             }}
           >
-            <p
-              style={{
-                fontFamily: "var(--font-oswald), Oswald, sans-serif",
-                fontSize: "12px",
-                fontWeight: 400,
-                letterSpacing: "3px",
-                textTransform: "uppercase",
-                color:
-                  section.id === "light" || section.id === "flat"
-                    ? "rgba(55,72,89,0.7)"
-                    : "rgba(255,255,255,0.5)",
-                marginBottom: "12px",
-              }}
-            >
-              {section.subtitle}
-            </p>
+            {section.subtitle && (
+              <p
+                style={{
+                  fontFamily: "var(--font-oswald), Oswald, sans-serif",
+                  fontSize: "12px",
+                  fontWeight: 400,
+                  letterSpacing: "3px",
+                  textTransform: "uppercase",
+                  color:
+                    section.id === "light" || section.id === "flat" || section.id === "nautical"
+                      ? "rgba(55,72,89,0.7)"
+                      : "rgba(255,255,255,0.5)",
+                  textShadow: "0 0 20px rgba(255,255,255,0.7), 0 0 40px rgba(255,255,255,0.5), 0 0 60px rgba(255,255,255,0.3)",
+                  marginBottom: "12px",
+                }}
+              >
+                {section.subtitle}
+              </p>
+            )}
 
             <h2
               style={{
@@ -364,40 +387,36 @@ export function ScrollShowcase({ projects }: ScrollShowcaseProps) {
                 fontSize: "clamp(28px, 4.5vw, 48px)",
                 fontWeight: 900,
                 color:
-                  section.id === "light" || section.id === "flat"
+                  section.id === "light" || section.id === "flat" || section.id === "nautical"
                     ? "#374859"
                     : "white",
                 letterSpacing: "1.5px",
                 lineHeight: 1.15,
                 margin: "0 0 20px",
-                textShadow:
-                  section.id === "light" || section.id === "flat"
-                    ? "none"
-                    : "0 2px 20px rgba(0,0,0,0.4)",
+                textShadow: "0 0 20px rgba(255,255,255,0.7), 0 0 40px rgba(255,255,255,0.5), 0 0 60px rgba(255,255,255,0.3)",
               }}
             >
               {section.title}
             </h2>
 
-            <p
-              style={{
-                fontFamily: "var(--font-lato), Lato, sans-serif",
-                fontSize: "clamp(15px, 1.8vw, 18px)",
-                fontWeight: 300,
-                color:
-                  section.id === "light" || section.id === "flat"
-                    ? "rgba(55,72,89,0.8)"
-                    : "rgba(255,255,255,0.8)",
-                lineHeight: 1.65,
-                margin: "0 0 32px",
-                textShadow:
-                  section.id === "light" || section.id === "flat"
-                    ? "none"
-                    : "0 1px 10px rgba(0,0,0,0.3)",
-              }}
-            >
-              {section.description}
-            </p>
+            {section.description && (
+              <p
+                style={{
+                  fontFamily: "var(--font-lato), Lato, sans-serif",
+                  fontSize: "clamp(15px, 1.8vw, 18px)",
+                  fontWeight: 300,
+                  color:
+                    section.id === "light" || section.id === "flat" || section.id === "nautical"
+                      ? "rgba(55,72,89,0.8)"
+                      : "rgba(255,255,255,0.8)",
+                  lineHeight: 1.65,
+                  margin: "0 0 32px",
+                  textShadow: "0 0 20px rgba(255,255,255,0.7), 0 0 40px rgba(255,255,255,0.5), 0 0 60px rgba(255,255,255,0.3)",
+                }}
+              >
+                {section.description}
+              </p>
+            )}
 
             {i === 0 && (
               <div
@@ -408,44 +427,8 @@ export function ScrollShowcase({ projects }: ScrollShowcaseProps) {
                   justifyContent: "center",
                 }}
               >
-                <a
-                  href="https://www.constructionforchange.org"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    background: "#cb463a",
-                    color: "white",
-                    padding: "14px 32px",
-                    borderRadius: "6px",
-                    fontSize: "14px",
-                    fontWeight: 900,
-                    textTransform: "uppercase",
-                    letterSpacing: "1px",
-                    textDecoration: "none",
-                  }}
-                >
-                  Explore Our Projects
-                </a>
-                <a
-                  href="https://www.constructionforchange.org"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    background: "transparent",
-                    color: "white",
-                    padding: "14px 32px",
-                    borderRadius: "0",
-                    fontSize: "14px",
-                    fontWeight: 400,
-                    fontFamily: "var(--font-oswald), Oswald, sans-serif",
-                    textTransform: "uppercase",
-                    letterSpacing: "1px",
-                    textDecoration: "none",
-                    border: "2px solid #cb463a",
-                  }}
-                >
-                  Our Story
-                </a>
+                <PlaceholderButton className="cfc-btn-primary" label="Explore Our Projects" tooltip="Links to your Projects page when integrated" />
+                <PlaceholderButton className="cfc-btn-secondary" label="Our Story" tooltip="Links to your About page when integrated" />
               </div>
             )}
 
@@ -536,5 +519,45 @@ export function ScrollShowcase({ projects }: ScrollShowcaseProps) {
         </div>
       ))}
     </div>
+  );
+}
+
+function PlaceholderButton({ className, label, tooltip }: { className: string; label: string; tooltip: string }) {
+  const [showTip, setShowTip] = useState(false);
+
+  return (
+    <span
+      className={className}
+      style={{ cursor: "help", position: "relative" }}
+      onClick={(e) => { e.preventDefault(); setShowTip(true); setTimeout(() => setShowTip(false), 3000); }}
+      onMouseEnter={() => setShowTip(true)}
+      onMouseLeave={() => setShowTip(false)}
+    >
+      {label}
+      <span style={{ marginLeft: "8px", opacity: 0.7, fontSize: "12px" }}>&#9998;</span>
+      {showTip && (
+        <span
+          style={{
+            position: "absolute",
+            bottom: "calc(100% + 10px)",
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: "rgba(0,0,0,0.85)",
+            color: "white",
+            padding: "8px 14px",
+            borderRadius: "8px",
+            fontSize: "12px",
+            fontWeight: 400,
+            whiteSpace: "nowrap",
+            textTransform: "none",
+            letterSpacing: "0",
+            pointerEvents: "none",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+          }}
+        >
+          {tooltip}
+        </span>
+      )}
+    </span>
   );
 }
