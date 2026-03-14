@@ -178,10 +178,12 @@ export function ScrollShowcase({ projects }: ScrollShowcaseProps) {
 
   function startSpin() {
     stopSpin();
+    const isMobile = window.innerWidth < 768;
+    const speed = isMobile ? 0.025 : 0.06;
     const spin = () => {
       if (!map.current) return;
       const center = map.current.getCenter();
-      center.lng += 0.06;
+      center.lng += speed;
       map.current.jumpTo({ center });
       spinFrameRef.current = requestAnimationFrame(spin);
     };
