@@ -112,6 +112,10 @@ interface ScrollShowcaseProps {
   projects: Project[];
 }
 
+function isLightSection(id: string) {
+  return id === "light" || id === "flat" || id === "nautical";
+}
+
 export function ScrollShowcase({ projects }: ScrollShowcaseProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -177,7 +181,7 @@ export function ScrollShowcase({ projects }: ScrollShowcaseProps) {
     const spin = () => {
       if (!map.current) return;
       const center = map.current.getCenter();
-      center.lng += 0.025;
+      center.lng += 0.06;
       map.current.jumpTo({ center });
       spinFrameRef.current = requestAnimationFrame(spin);
     };
@@ -279,29 +283,6 @@ export function ScrollShowcase({ projects }: ScrollShowcaseProps) {
 
   return (
     <div style={{ position: "relative" }}>
-      {/* Fixed logo — top left */}
-      <a
-        href="#"
-        onClick={(e) => {
-          e.preventDefault();
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        }}
-        style={{
-          position: "fixed",
-          top: 16,
-          left: 20,
-          zIndex: 10,
-          cursor: "pointer",
-          filter: "drop-shadow(0 0 10px rgba(255,255,255,1)) drop-shadow(0 0 25px rgba(255,255,255,0.8)) drop-shadow(0 0 50px rgba(255,255,255,0.6)) drop-shadow(0 0 80px rgba(255,255,255,0.4))",
-        }}
-      >
-        <img
-          src="/cfc-logo.png"
-          alt="Construction for Change"
-          style={{ width: "140px", height: "auto" }}
-        />
-      </a>
-
       {/* Fixed map background */}
       <div
         ref={mapContainer}
@@ -342,9 +323,9 @@ export function ScrollShowcase({ projects }: ScrollShowcaseProps) {
               right: 0,
               bottom: 0,
               background:
-                section.id === "light" || section.id === "flat" || section.id === "nautical"
-                  ? "rgba(255,255,255,0.35)"
-                  : "rgba(5, 5, 20, 0.4)",
+                isLightSection(section.id)
+                  ? "rgba(255,255,255,0.55)"
+                  : "rgba(5, 5, 20, 0.55)",
               zIndex: 0,
               transition: "background 0.5s",
             }}
@@ -370,10 +351,12 @@ export function ScrollShowcase({ projects }: ScrollShowcaseProps) {
                   letterSpacing: "3px",
                   textTransform: "uppercase",
                   color:
-                    section.id === "light" || section.id === "flat" || section.id === "nautical"
+                    isLightSection(section.id)
                       ? "rgba(55,72,89,0.7)"
                       : "rgba(255,255,255,0.5)",
-                  textShadow: "0 0 20px rgba(255,255,255,0.7), 0 0 40px rgba(255,255,255,0.5), 0 0 60px rgba(255,255,255,0.3)",
+                  textShadow: isLightSection(section.id)
+                    ? "0 0 12px rgba(255,255,255,0.9), 0 0 25px rgba(255,255,255,0.7)"
+                    : "0 0 10px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.5)",
                   marginBottom: "12px",
                 }}
               >
@@ -381,23 +364,41 @@ export function ScrollShowcase({ projects }: ScrollShowcaseProps) {
               </p>
             )}
 
-            <h2
-              style={{
-                fontFamily: "var(--font-lato), Lato, sans-serif",
-                fontSize: "clamp(28px, 4.5vw, 48px)",
-                fontWeight: 900,
-                color:
-                  section.id === "light" || section.id === "flat" || section.id === "nautical"
-                    ? "#374859"
-                    : "white",
-                letterSpacing: "1.5px",
-                lineHeight: 1.15,
-                margin: "0 0 20px",
-                textShadow: "0 0 20px rgba(255,255,255,0.7), 0 0 40px rgba(255,255,255,0.5), 0 0 60px rgba(255,255,255,0.3)",
-              }}
-            >
-              {section.title}
-            </h2>
+            {i === 0 ? (
+              <img
+                src="/cfc-logo.png"
+                alt="Construction for Change"
+                style={{
+                  width: "clamp(200px, 32vw, 380px)",
+                  height: "auto",
+                  marginBottom: "20px",
+                  display: "block",
+                  marginLeft: "auto",
+                  marginRight: "auto",
+                  filter: "drop-shadow(0 0 10px rgba(255,255,255,1)) drop-shadow(0 0 25px rgba(255,255,255,0.8)) drop-shadow(0 0 50px rgba(255,255,255,0.6)) drop-shadow(0 0 80px rgba(255,255,255,0.4))",
+                }}
+              />
+            ) : (
+              <h2
+                style={{
+                  fontFamily: "var(--font-lato), Lato, sans-serif",
+                  fontSize: "clamp(28px, 4.5vw, 48px)",
+                  fontWeight: 900,
+                  color:
+                    isLightSection(section.id)
+                      ? "#374859"
+                      : "white",
+                  letterSpacing: "1.5px",
+                  lineHeight: 1.15,
+                  margin: "0 0 20px",
+                  textShadow: isLightSection(section.id)
+                    ? "0 0 15px rgba(255,255,255,0.9), 0 0 30px rgba(255,255,255,0.7), 0 0 50px rgba(255,255,255,0.5)"
+                    : "0 0 10px rgba(0,0,0,0.8), 0 0 25px rgba(0,0,0,0.5), 0 0 50px rgba(0,0,0,0.3)",
+                }}
+              >
+                {section.title}
+              </h2>
+            )}
 
             {section.description && (
               <p
@@ -405,13 +406,14 @@ export function ScrollShowcase({ projects }: ScrollShowcaseProps) {
                   fontFamily: "var(--font-lato), Lato, sans-serif",
                   fontSize: "clamp(15px, 1.8vw, 18px)",
                   fontWeight: 300,
-                  color:
-                    section.id === "light" || section.id === "flat" || section.id === "nautical"
-                      ? "rgba(55,72,89,0.8)"
-                      : "rgba(255,255,255,0.8)",
+                  color: isLightSection(section.id)
+                    ? "rgba(55,72,89,0.8)"
+                    : "rgba(255,255,255,0.8)",
                   lineHeight: 1.65,
                   margin: "0 0 32px",
-                  textShadow: "0 0 20px rgba(255,255,255,0.7), 0 0 40px rgba(255,255,255,0.5), 0 0 60px rgba(255,255,255,0.3)",
+                  textShadow: isLightSection(section.id)
+                    ? "0 0 12px rgba(255,255,255,0.9), 0 0 25px rgba(255,255,255,0.7)"
+                    : "0 0 10px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.5)",
                 }}
               >
                 {section.description}

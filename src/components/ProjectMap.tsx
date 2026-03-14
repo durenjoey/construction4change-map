@@ -74,7 +74,7 @@ export function ProjectMap({ projects }: ProjectMapProps) {
     const spin = () => {
       if (!spinningRef.current || !map.current) return;
       const center = map.current.getCenter();
-      center.lng += 0.01;
+      center.lng += 0.06;
       map.current.jumpTo({ center });
       spinFrameRef.current = requestAnimationFrame(spin);
     };
@@ -428,134 +428,6 @@ export function ProjectMap({ projects }: ProjectMapProps) {
         width: "100%",
       }}
     >
-      {/* Header */}
-      <div
-        style={{
-          borderBottom: `1px solid ${headerBorder}`,
-          background: headerBg,
-          padding: "12px 24px",
-          transition: "background 0.3s, border-color 0.3s",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: "12px",
-          }}
-        >
-          <Image
-            src="/cfc-logo.png"
-            alt="Construction for Change"
-            width={140}
-            height={140}
-            style={{ objectFit: "contain", maxHeight: "60px", width: "auto" }}
-          />
-          <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-            <StatBadge icon={<Building2 size={16} color="#cb463a" />} value={totalProjects} label="Projects" textColor={headerText} mutedColor={headerMuted} />
-            <StatBadge icon={<Globe size={16} color="#cb463a" />} value={countries} label="Countries" textColor={headerText} mutedColor={headerMuted} />
-            {/* Search toggle */}
-            <button
-              onClick={() => { setSearchOpen(!searchOpen); if (searchOpen) setSearchQuery(""); }}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: 36,
-                height: 36,
-                borderRadius: "50%",
-                border: `1px solid ${headerBorder}`,
-                background: searchOpen ? (isDark ? "#cb463a" : "#374859") : "transparent",
-                color: searchOpen ? "white" : headerMuted,
-                cursor: "pointer",
-                transition: "all 0.2s",
-              }}
-            >
-              {searchOpen ? <X size={16} /> : <Search size={16} />}
-            </button>
-          </div>
-        </div>
-        {/* Search bar */}
-        {searchOpen && (
-          <div style={{ marginTop: "10px" }}>
-            <input
-              autoFocus
-              type="text"
-              placeholder="Search by partner, city, or country..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                width: "100%",
-                maxWidth: "500px",
-                padding: "8px 14px",
-                borderRadius: "8px",
-                border: `1px solid ${headerBorder}`,
-                background: isDark ? "#2a2a3e" : "#faf9f5",
-                color: headerText,
-                fontSize: "14px",
-                outline: "none",
-              }}
-            />
-            {searchQuery && (
-              <span style={{ marginLeft: "12px", fontSize: "12px", color: headerMuted }}>
-                {filteredProjects.length} result{filteredProjects.length !== 1 ? "s" : ""}
-              </span>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Filters */}
-      <div
-        style={{
-          borderBottom: `1px solid ${headerBorder}`,
-          background: filterBg,
-          padding: "10px 24px",
-          display: "flex",
-          gap: "8px",
-          overflowX: "auto",
-          transition: "background 0.3s, border-color 0.3s",
-        }}
-      >
-        {filterCounts.map(({ type, count }) => (
-          <button
-            key={type}
-            onClick={() => setActiveFilter(type)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "6px 14px",
-              borderRadius: "9999px",
-              fontSize: "12px",
-              fontWeight: 600,
-              whiteSpace: "nowrap",
-              border: activeFilter === type ? "none" : `1px solid ${filterInactiveBorder}`,
-              background: activeFilter === type ? filterActiveBg : filterInactiveBg,
-              color: activeFilter === type ? "white" : filterInactiveText,
-              cursor: "pointer",
-              transition: "all 0.15s",
-            }}
-          >
-            {type !== "All" && (
-              <span
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: "50%",
-                  background: getTypeColor(type),
-                  display: "inline-block",
-                }}
-              />
-            )}
-            {type}
-            <span style={{ fontSize: "10px", opacity: 0.6 }}>{count}</span>
-          </button>
-        ))}
-      </div>
-
       {/* Map */}
       <div style={{ flex: 1, position: "relative" }}>
         <div
