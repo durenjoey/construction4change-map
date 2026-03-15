@@ -3,24 +3,40 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import {
-  Project,
-  PROJECT_TYPES,
-  ProjectType,
-  getTypeColor,
-  TYPE_COLORS,
-} from "@/lib/types";
-import Image from "next/image";
-import { Building2, Globe, Calendar, Map, Moon, Search, X, Earth, Sun } from "lucide-react";
+import { Project } from "@/lib/types";
 
-type ViewMode = "space" | "globe" | "flat" | "dark";
+// ISO 3166-1 alpha-3 codes for countries CfC has worked in
+const CFC_COUNTRY_CODES = [
+  "BOL", // Bolivia
+  "KHM", // Cambodia
+  "DMA", // Dominica
+  "DOM", // Dominican Republic
+  "GIN", // Guinea
+  "GNB", // Guinea-Bissau
+  "HTI", // Haiti
+  "IND", // India
+  "KEN", // Kenya
+  "LBR", // Liberia
+  "MWI", // Malawi
+  "NPL", // Nepal
+  "PRI", // Puerto Rico
+  "RWA", // Rwanda
+  "SLB", // Solomon Islands
+  "ZAF", // South Africa
+  "TGO", // Togo
+  "VGB", // Tortola / BVI
+  "USA", // USA
+  "VIR", // USVI
+  "UGA", // Uganda
+  "ZMB", // Zambia
+];
 
-const VIEW_STYLES: Record<ViewMode, string> = {
-  space: "mapbox://styles/mapbox/satellite-streets-v12",
-  globe: "mapbox://styles/mapbox/light-v11",
-  flat: "mapbox://styles/mapbox/light-v11",
-  dark: "mapbox://styles/mapbox/dark-v11",
+const PIN_COLORS = {
+  active: "#cb463a",
+  completed: "#374859",
 };
+
+const COUNTRY_HIGHLIGHT = "#d4e8d0";
 
 interface ProjectMapProps {
   projects: Project[];
@@ -30,73 +46,31 @@ export function ProjectMap({ projects }: ProjectMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const popupRef = useRef<mapboxgl.Popup | null>(null);
-  const spinningRef = useRef(true);
-  const spinFrameRef = useRef<number | null>(null);
-  const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [activeFilter, setActiveFilter] = useState<ProjectType>("All");
   const [mapReady, setMapReady] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>("space");
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [mapInteractive, setMapInteractive] = useState(true);
-  const [legendOpen, setLegendOpen] = useState(
-    typeof window !== "undefined" ? window.innerWidth >= 768 : true
-  );
-  const prevStyleRef = useRef<string>("mapbox://styles/mapbox/light-v11");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "completed">("all");
 
   const mappableProjects = projects.filter((p) => p.lat && p.lng);
 
   const filteredProjects = mappableProjects.filter((p) => {
-    const matchesType = activeFilter === "All" || p.type === activeFilter;
+    const matchesStatus =
+      statusFilter === "all" || p.status === statusFilter;
     const matchesSearch =
       !searchQuery ||
       p.partner.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (p.city && p.city.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (p.country && p.country.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchesType && matchesSearch;
+    return matchesStatus && matchesSearch;
   });
 
   const totalProjects = mappableProjects.length;
+  const activeCount = mappableProjects.filter((p) => p.status === "active").length;
+  const completedCount = mappableProjects.filter((p) => p.status === "completed").length;
   const countries = new Set(projects.map((p) => p.country).filter(Boolean)).size;
   const years = projects.filter((p) => p.startYear).map((p) => p.startYear!);
   const yearRange = years.length
-    ? `${Math.min(...years)}\u2013${Math.max(...years)}`
+    ? `${Math.min(...years)}\u2013Present`
     : "";
-
-  const isDark = viewMode === "dark";
-  const isDarkMap = viewMode === "dark" || viewMode === "space";
-  const isGlobeView = viewMode !== "flat";
-  const spinsAutomatically = viewMode === "space" || viewMode === "globe" || viewMode === "dark";
-
-  function startSpin() {
-    if (spinningRef.current && spinFrameRef.current) return;
-    spinningRef.current = true;
-    const isMobile = window.innerWidth < 768;
-    const speed = isMobile ? 0.025 : 0.06;
-    const spin = () => {
-      if (!spinningRef.current || !map.current) return;
-      const center = map.current.getCenter();
-      center.lng += speed;
-      map.current.jumpTo({ center });
-      spinFrameRef.current = requestAnimationFrame(spin);
-    };
-    spin();
-  }
-
-  function stopSpin() {
-    spinningRef.current = false;
-    if (spinFrameRef.current) {
-      cancelAnimationFrame(spinFrameRef.current);
-      spinFrameRef.current = null;
-    }
-  }
-
-  function scheduleResume(delay = 5000) {
-    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
-    resumeTimerRef.current = setTimeout(() => {
-      if (!popupRef.current && spinsAutomatically) startSpin();
-    }, delay);
-  }
 
   const buildGeoJSON = useCallback(
     (projectList: Project[]): GeoJSON.FeatureCollection => ({
@@ -118,17 +92,122 @@ export function ProjectMap({ projects }: ProjectMapProps) {
             details: p.details || "",
             startYear: p.startYear || 0,
             endYear: p.endYear || 0,
-            status: p.status,
-            color: getTypeColor(p.type),
+            status: p.status || "completed",
+            color: p.status === "active" ? PIN_COLORS.active : PIN_COLORS.completed,
           },
         })),
     }),
     []
   );
 
+  function createPinImage(
+    color: string,
+    size: number = 28
+  ): { width: number; height: number; data: Uint8Array } {
+    const w = size;
+    const h = Math.round(size * 1.4);
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d")!;
+
+    const cx = w / 2;
+    const r = w * 0.38;
+    const cy = r + 2; // center of the circle part
+    const tipY = h - 1;
+
+    // Draw pin: circle head + pointed bottom
+    ctx.beginPath();
+    // Start from bottom tip, curve up the left side, arc across the top, curve down the right side
+    ctx.moveTo(cx, tipY);
+    ctx.bezierCurveTo(cx - r * 0.3, cy + r * 1.2, cx - r, cy + r * 0.4, cx - r, cy);
+    ctx.arc(cx, cy, r, Math.PI, 0, false);
+    ctx.bezierCurveTo(cx + r, cy + r * 0.4, cx + r * 0.3, cy + r * 1.2, cx, tipY);
+    ctx.closePath();
+
+    // Shadow
+    ctx.shadowColor = "rgba(0,0,0,0.25)";
+    ctx.shadowBlur = 3;
+    ctx.shadowOffsetY = 1;
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    // Reset shadow for stroke
+    ctx.shadowColor = "transparent";
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Inner dot
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 0.38, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(255,255,255,0.95)";
+    ctx.fill();
+
+    const imageData = ctx.getImageData(0, 0, w, h);
+    return { width: w, height: h, data: new Uint8Array(imageData.data.buffer) };
+  }
+
+  function setupCountryHighlights(mapInstance: mapboxgl.Map) {
+    if (mapInstance.getSource("country-boundaries")) return;
+
+    mapInstance.addSource("country-boundaries", {
+      type: "vector",
+      url: "mapbox://mapbox.country-boundaries-v1",
+    });
+
+    // Find the first symbol layer to insert below labels
+    const layers = mapInstance.getStyle().layers || [];
+    let insertBefore: string | undefined;
+    for (const layer of layers) {
+      if (layer.type === "symbol") {
+        insertBefore = layer.id;
+        break;
+      }
+    }
+
+    mapInstance.addLayer(
+      {
+        id: "cfc-country-fills",
+        type: "fill",
+        source: "country-boundaries",
+        "source-layer": "country_boundaries",
+        paint: {
+          "fill-color": [
+            "case",
+            ["in", ["get", "iso_3166_1_alpha_3"], ["literal", CFC_COUNTRY_CODES]],
+            COUNTRY_HIGHLIGHT,
+            "rgba(0,0,0,0)",
+          ],
+          "fill-opacity": 0.6,
+        },
+      },
+      insertBefore
+    );
+
+    mapInstance.addLayer(
+      {
+        id: "cfc-country-borders",
+        type: "line",
+        source: "country-boundaries",
+        "source-layer": "country_boundaries",
+        paint: {
+          "line-color": [
+            "case",
+            ["in", ["get", "iso_3166_1_alpha_3"], ["literal", CFC_COUNTRY_CODES]],
+            "#9abb94",
+            "rgba(0,0,0,0)",
+          ],
+          "line-width": 1,
+          "line-opacity": 0.5,
+        },
+      },
+      insertBefore
+    );
+  }
+
   function setupLayers(mapInstance: mapboxgl.Map) {
-    // Remove old layers/source if they exist
-    ["cluster-count", "clusters", "project-pins", "project-pins-hover"].forEach((id) => {
+    ["cluster-count", "clusters", "project-pins"].forEach((id) => {
       if (mapInstance.getLayer(id)) mapInstance.removeLayer(id);
     });
     if (mapInstance.getSource("projects")) mapInstance.removeSource("projects");
@@ -137,24 +216,25 @@ export function ProjectMap({ projects }: ProjectMapProps) {
       type: "geojson",
       data: buildGeoJSON(filteredProjects),
       cluster: true,
-      clusterMaxZoom: 7,
-      clusterRadius: 25,
+      clusterMaxZoom: 8,
+      clusterRadius: 30,
     });
 
-    // Cluster dots — subtle, same style as pins just slightly bigger
+    // Cluster circles
     mapInstance.addLayer({
       id: "clusters",
       type: "circle",
       source: "projects",
       filter: ["has", "point_count"],
       paint: {
-        "circle-color": isDarkMap ? "#cb463a" : "#cb463a",
+        "circle-color": "#374859",
         "circle-radius": [
-          "step", ["get", "point_count"],
-          12, 3, 15, 8, 18, 15, 22,
+          "step",
+          ["get", "point_count"],
+          14, 5, 18, 10, 22, 20, 26,
         ],
         "circle-stroke-width": 2,
-        "circle-stroke-color": isDarkMap ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.8)",
+        "circle-stroke-color": "white",
         "circle-opacity": 0.85,
       },
     });
@@ -167,80 +247,111 @@ export function ProjectMap({ projects }: ProjectMapProps) {
       filter: ["has", "point_count"],
       layout: {
         "text-field": ["get", "point_count_abbreviated"],
-        "text-size": 11,
+        "text-size": 12,
+        "text-font": ["DIN Pro Medium", "Arial Unicode MS Bold"],
       },
       paint: {
         "text-color": "#ffffff",
       },
     });
 
-    // Individual pins — scale with zoom
+    // Individual pins using symbol layer with custom icons
     mapInstance.addLayer({
       id: "project-pins",
-      type: "circle",
+      type: "symbol",
       source: "projects",
       filter: ["!", ["has", "point_count"]],
-      paint: {
-        "circle-radius": [
-          "interpolate", ["linear"], ["zoom"],
-          2, 5,
-          5, 7,
-          8, 10,
-          12, 14,
+      layout: {
+        "icon-image": [
+          "case",
+          ["==", ["get", "status"], "active"],
+          "pin-active",
+          "pin-completed",
         ],
-        "circle-color": ["get", "color"],
-        "circle-stroke-width": 2,
-        "circle-stroke-color": isDarkMap ? "rgba(255,255,255,0.5)" : "#ffffff",
-        "circle-opacity": 0.9,
-      },
-    });
-
-    // Hover layer
-    mapInstance.addLayer({
-      id: "project-pins-hover",
-      type: "circle",
-      source: "projects",
-      filter: ["==", "idx", -1],
-      paint: {
-        "circle-radius": [
-          "interpolate", ["linear"], ["zoom"],
-          2, 8,
-          5, 11,
-          8, 14,
-          12, 18,
+        "icon-size": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          2, 0.6,
+          5, 0.8,
+          8, 1,
+          12, 1.2,
         ],
-        "circle-color": ["get", "color"],
-        "circle-stroke-width": 2.5,
-        "circle-stroke-color": isDarkMap ? "rgba(255,255,255,0.7)" : "#ffffff",
-        "circle-opacity": 0.95,
+        "icon-anchor": "bottom",
+        "icon-allow-overlap": true,
+        "icon-ignore-placement": true,
       },
     });
   }
 
   function setupInteractions(mapInstance: mapboxgl.Map) {
-    // Hover
+    // Hover on pins — show popup
     mapInstance.on("mouseenter", "project-pins", (e) => {
       mapInstance.getCanvas().style.cursor = "pointer";
-      if (e.features?.[0]) {
-        mapInstance.setFilter("project-pins-hover", [
-          "==", "idx", e.features[0].properties!.idx,
-        ]);
-      }
-    });
-    mapInstance.on("mouseleave", "project-pins", () => {
-      mapInstance.getCanvas().style.cursor = "";
-      mapInstance.setFilter("project-pins-hover", ["==", "idx", -1]);
+      if (!e.features?.length) return;
+
+      const feat = e.features[0];
+      const coords = (feat.geometry as GeoJSON.Point).coordinates.slice() as [number, number];
+
+      // Check for nearby pins at same location
+      const point = e.point;
+      const nearby = mapInstance.queryRenderedFeatures(
+        [[point.x - 8, point.y - 8], [point.x + 8, point.y + 8]],
+        { layers: ["project-pins"] }
+      );
+
+      if (popupRef.current) popupRef.current.remove();
+
+      const html =
+        nearby.length > 1
+          ? buildMultiPopupHTML(nearby.map((f) => f.properties!))
+          : buildSinglePopupHTML(feat.properties!);
+
+      const popup = new mapboxgl.Popup({
+        closeOnClick: false,
+        closeButton: false,
+        maxWidth: "300px",
+        offset: 20,
+      })
+        .setLngLat(coords)
+        .setHTML(html)
+        .addTo(mapInstance);
+
+      popupRef.current = popup;
     });
 
-    // Cluster hover + click to zoom
+    mapInstance.on("mouseleave", "project-pins", () => {
+      mapInstance.getCanvas().style.cursor = "";
+      if (popupRef.current) {
+        popupRef.current.remove();
+        popupRef.current = null;
+      }
+    });
+
+    // Click pin — fly to and keep popup
+    mapInstance.on("click", "project-pins", (e) => {
+      if (!e.features?.length) return;
+      const coords = (e.features[0].geometry as GeoJSON.Point).coordinates.slice() as [number, number];
+      mapInstance.flyTo({
+        center: coords,
+        zoom: Math.max(mapInstance.getZoom(), 6),
+        duration: 600,
+      });
+    });
+
+    // Cluster hover
     mapInstance.on("mouseenter", "clusters", () => {
       mapInstance.getCanvas().style.cursor = "pointer";
     });
     mapInstance.on("mouseleave", "clusters", () => {
       mapInstance.getCanvas().style.cursor = "";
     });
+
+    // Click cluster — zoom in
     mapInstance.on("click", "clusters", (e) => {
-      const features = mapInstance.queryRenderedFeatures(e.point, { layers: ["clusters"] });
+      const features = mapInstance.queryRenderedFeatures(e.point, {
+        layers: ["clusters"],
+      });
       if (!features.length) return;
       const clusterId = features[0].properties!.cluster_id;
       const source = mapInstance.getSource("projects") as mapboxgl.GeoJSONSource;
@@ -251,56 +362,14 @@ export function ProjectMap({ projects }: ProjectMapProps) {
       });
     });
 
-    // Click pin
-    mapInstance.on("click", "project-pins", (e) => {
-      if (!e.features?.length) return;
-      stopSpin();
-      if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
-      if (popupRef.current) popupRef.current.remove();
-
-      const feat = e.features[0];
-      const coords = (feat.geometry as GeoJSON.Point).coordinates.slice() as [number, number];
-      const point = e.point;
-      const nearby = mapInstance.queryRenderedFeatures(
-        [[point.x - 10, point.y - 10], [point.x + 10, point.y + 10]],
-        { layers: ["project-pins"] }
-      );
-
-      const dark = isDarkMap;
-      const html = nearby.length > 1
-        ? buildMultiPopupHTML(nearby.map((f) => f.properties!), dark)
-        : buildSinglePopupHTML(feat.properties!, dark);
-
-      const popup = new mapboxgl.Popup({
-        closeOnClick: false,
-        closeButton: true,
-        maxWidth: "300px",
-        offset: 12,
-      })
-        .setLngLat(coords)
-        .setHTML(html)
-        .addTo(mapInstance);
-
-      popup.on("close", () => {
-        popupRef.current = null;
-        scheduleResume(3000);
-      });
-
-      popupRef.current = popup;
-      mapInstance.flyTo({
-        center: coords,
-        zoom: Math.max(mapInstance.getZoom(), 5),
-        duration: 800,
-      });
-    });
-
-    // Click empty → close popup
+    // Click empty — close popup
     mapInstance.on("click", (e) => {
-      const pins = mapInstance.queryRenderedFeatures(e.point, { layers: ["project-pins", "clusters"] });
+      const pins = mapInstance.queryRenderedFeatures(e.point, {
+        layers: ["project-pins", "clusters"],
+      });
       if (!pins.length && popupRef.current) {
         popupRef.current.remove();
         popupRef.current = null;
-        scheduleResume(3000);
       }
     });
   }
@@ -318,19 +387,13 @@ export function ProjectMap({ projects }: ProjectMapProps) {
 
     const mapInstance = new mapboxgl.Map({
       container: mapContainer.current,
-      style: VIEW_STYLES["space"],
-      center: [20, 5],
-      zoom: 2,
+      style: "mapbox://styles/mapbox/light-v11",
+      center: [20, 10],
+      zoom: 2.2,
       minZoom: 1.5,
       maxZoom: 15,
-      projection: "globe",
-      scrollZoom: true,
-      dragPan: true,
-      dragRotate: true,
-      touchZoomRotate: true,
-      doubleClickZoom: true,
+      projection: "mercator",
       attributionControl: false,
-      logoPosition: "bottom-left",
     });
 
     mapInstance.addControl(
@@ -339,59 +402,28 @@ export function ProjectMap({ projects }: ProjectMapProps) {
     );
 
     mapInstance.on("load", () => {
-      applyFog(mapInstance, viewMode);
+      // Register pin icons
+      const activePin = createPinImage(PIN_COLORS.active, 24);
+      const completedPin = createPinImage(PIN_COLORS.completed, 24);
+
+      mapInstance.addImage("pin-active", activePin);
+      mapInstance.addImage("pin-completed", completedPin);
+
+      setupCountryHighlights(mapInstance);
       setupLayers(mapInstance);
       setupInteractions(mapInstance);
       setMapReady(true);
-      startSpin();
     });
 
-    ["mousedown", "touchstart", "wheel", "dblclick"].forEach((evt) => {
-      mapInstance.on(evt as any, () => {
-        stopSpin();
-        // Only auto-resume spin if map is not in interactive mode
-        if (!mapInteractive) scheduleResume();
-      });
-    });
-
-    prevStyleRef.current = VIEW_STYLES["space"];
     map.current = mapInstance;
 
     return () => {
-      stopSpin();
-      if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
       if (popupRef.current) popupRef.current.remove();
       mapInstance.remove();
       map.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Handle view mode changes
-  useEffect(() => {
-    if (!map.current || !mapReady) return;
-    const m = map.current;
-    const newStyle = VIEW_STYLES[viewMode];
-
-    if (newStyle !== prevStyleRef.current) {
-      // Style change needed (switching to/from dark)
-      if (popupRef.current) popupRef.current.remove();
-      m.setStyle(newStyle);
-      m.once("style.load", () => {
-        m.setProjection(isGlobeView ? "globe" : "mercator");
-        applyFog(m, viewMode);
-        setupLayers(m);
-        setupInteractions(m);
-        if (spinsAutomatically) startSpin(); else stopSpin();
-      });
-      prevStyleRef.current = newStyle;
-    } else {
-      m.setProjection(isGlobeView ? "globe" : "mercator");
-      applyFog(m, viewMode);
-      if (spinsAutomatically) startSpin(); else stopSpin();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewMode, mapReady]);
 
   // Update data on filter/search change
   useEffect(() => {
@@ -401,32 +433,15 @@ export function ProjectMap({ projects }: ProjectMapProps) {
       source.setData(buildGeoJSON(filteredProjects));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeFilter, searchQuery, mapReady]);
-
-  const filterCounts = PROJECT_TYPES.map((type) => ({
-    type,
-    count:
-      type === "All"
-        ? mappableProjects.length
-        : mappableProjects.filter((p) => p.type === type).length,
-  })).filter((f) => f.count > 0);
-
-  const headerBg = isDark ? "#1a1a2e" : "white";
-  const headerBorder = isDark ? "#333" : "#d6d6d6";
-  const headerText = isDark ? "#e0e0e0" : "#374859";
-  const headerMuted = isDark ? "#888" : "#999";
-  const filterBg = isDark ? "#12121f" : "#faf9f5";
-  const filterActiveBg = isDark ? "#cb463a" : "#374859";
-  const filterInactiveBg = isDark ? "#1a1a2e" : "white";
-  const filterInactiveText = isDark ? "#aaa" : "#374859";
-  const filterInactiveBorder = isDark ? "#444" : "#d6d6d6";
+  }, [statusFilter, searchQuery, mapReady]);
 
   return (
     <div
       style={{
         display: "flex",
         flexDirection: "column",
-        height: "100vh",
+        height: "calc(100vh - 48px)",
+        marginTop: "48px",
         width: "100%",
       }}
     >
@@ -434,146 +449,293 @@ export function ProjectMap({ projects }: ProjectMapProps) {
       <div style={{ flex: 1, position: "relative" }}>
         <div
           ref={mapContainer}
-          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+          }}
         />
 
-        {/* Color legend — collapsible, top-right */}
+        {/* Top-left: Stats + Search */}
         <div
           style={{
             position: "absolute",
             top: 12,
-            right: 50,
+            left: 12,
             zIndex: 5,
+            display: "flex",
+            flexDirection: "column",
+            gap: "8px",
           }}
         >
-          {legendOpen ? (
-            <div
-              style={{
-                background: isDarkMap ? "rgba(20,20,35,0.92)" : "rgba(255,255,255,0.94)",
-                borderRadius: "10px",
-                padding: "12px 16px",
-                boxShadow: "0 2px 12px rgba(0,0,0,0.15)",
-                border: `1px solid ${isDarkMap ? "#444" : "#d6d6d6"}`,
-                backdropFilter: "blur(8px)",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  marginBottom: "8px",
-                  cursor: "pointer",
-                }}
-                onClick={() => setLegendOpen(false)}
-              >
-                <span style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1.5px", color: isDarkMap ? "#aaa" : "#999" }}>
-                  Project Types
-                </span>
-                <X size={12} style={{ color: isDarkMap ? "#aaa" : "#999" }} />
-              </div>
-              {Object.entries(TYPE_COLORS).map(([type, color]) => (
-                <div key={type} style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                  <span style={{ width: 10, height: 10, borderRadius: "50%", background: color, display: "inline-block", flexShrink: 0, border: isDarkMap ? "1px solid rgba(255,255,255,0.2)" : "none" }} />
-                  <span style={{ fontSize: "11px", color: isDarkMap ? "#ccc" : "#374859" }}>{type}</span>
-                </div>
-              ))}
+          {/* Stats bar */}
+          <div
+            style={{
+              background: "rgba(255,255,255,0.95)",
+              borderRadius: "10px",
+              padding: "12px 16px",
+              boxShadow: "0 2px 12px rgba(0,0,0,0.1)",
+              border: "1px solid #d6d6d6",
+              display: "flex",
+              gap: "20px",
+              alignItems: "center",
+              fontFamily: "var(--font-lato), Lato, sans-serif",
+            }}
+          >
+            <div>
+              <span style={{ fontWeight: 700, fontSize: "18px", color: "#374859" }}>
+                {totalProjects}
+              </span>
+              <span style={{ fontSize: "11px", color: "#999", marginLeft: "4px" }}>
+                Projects
+              </span>
             </div>
-          ) : (
-            <button
-              onClick={() => setLegendOpen(true)}
+            <div
+              style={{ width: "1px", height: "20px", background: "#d6d6d6" }}
+            />
+            <div>
+              <span style={{ fontWeight: 700, fontSize: "18px", color: "#374859" }}>
+                {countries}
+              </span>
+              <span style={{ fontSize: "11px", color: "#999", marginLeft: "4px" }}>
+                Countries
+              </span>
+            </div>
+            <div
+              style={{ width: "1px", height: "20px", background: "#d6d6d6" }}
+            />
+            <div>
+              <span style={{ fontWeight: 600, fontSize: "13px", color: "#374859" }}>
+                {yearRange}
+              </span>
+            </div>
+          </div>
+
+          {/* Search */}
+          <div
+            style={{
+              background: "rgba(255,255,255,0.95)",
+              borderRadius: "10px",
+              padding: "8px 12px",
+              boxShadow: "0 2px 12px rgba(0,0,0,0.1)",
+              border: "1px solid #d6d6d6",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#999"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.35-4.35" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Search partner, city, or country..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               style={{
-                background: isDarkMap ? "rgba(20,20,35,0.9)" : "rgba(255,255,255,0.92)",
-                borderRadius: "9999px",
-                padding: "8px 14px",
-                boxShadow: "0 2px 12px rgba(0,0,0,0.15)",
-                border: `1px solid ${isDarkMap ? "#444" : "#d6d6d6"}`,
-                backdropFilter: "blur(8px)",
-                cursor: "pointer",
-                display: "flex",
+                border: "none",
+                outline: "none",
+                fontSize: "13px",
+                fontFamily: "var(--font-lato), Lato, sans-serif",
+                color: "#374859",
+                background: "transparent",
+                width: "220px",
+              }}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                style={{
+                  border: "none",
+                  background: "none",
+                  cursor: "pointer",
+                  color: "#999",
+                  fontSize: "16px",
+                  lineHeight: 1,
+                  padding: "0 2px",
+                }}
+              >
+                &times;
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Bottom-left: Legend */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: 20,
+            left: 12,
+            zIndex: 5,
+            background: "rgba(255,255,255,0.95)",
+            borderRadius: "10px",
+            padding: "12px 16px",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.1)",
+            border: "1px solid #d6d6d6",
+            fontFamily: "var(--font-lato), Lato, sans-serif",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "10px",
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "1.5px",
+              color: "#999",
+              marginBottom: "8px",
+            }}
+          >
+            Legend
+          </div>
+
+          {/* Active pin */}
+          <button
+            onClick={() =>
+              setStatusFilter(statusFilter === "active" ? "all" : "active")
+            }
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              marginBottom: "6px",
+              cursor: "pointer",
+              border: "none",
+              background: "none",
+              padding: "2px 0",
+              opacity: statusFilter === "completed" ? 0.4 : 1,
+              transition: "opacity 0.2s",
+            }}
+          >
+            <span
+              style={{
+                width: 12,
+                height: 16,
+                display: "inline-flex",
                 alignItems: "center",
-                gap: "6px",
-                fontSize: "11px",
-                fontWeight: 600,
-                color: isDarkMap ? "#ccc" : "#374859",
+                justifyContent: "center",
               }}
             >
-              <div style={{ display: "flex", gap: "3px" }}>
-                {Object.values(TYPE_COLORS).slice(0, 4).map((c, i) => (
-                  <span key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: c, display: "inline-block" }} />
-                ))}
-              </div>
-              Legend
-            </button>
-          )}
+              <svg width="12" height="16" viewBox="0 0 12 16">
+                <path
+                  d="M6 0C2.7 0 0 2.7 0 6c0 4.5 6 10 6 10s6-5.5 6-10c0-3.3-2.7-6-6-6z"
+                  fill={PIN_COLORS.active}
+                />
+                <circle cx="6" cy="6" r="2.5" fill="white" fillOpacity="0.9" />
+              </svg>
+            </span>
+            <span style={{ fontSize: "12px", color: "#374859", fontWeight: 600 }}>
+              Active Projects
+            </span>
+            <span
+              style={{
+                fontSize: "11px",
+                color: "#999",
+                fontWeight: 400,
+              }}
+            >
+              ({activeCount})
+            </span>
+          </button>
+
+          {/* Completed pin */}
+          <button
+            onClick={() =>
+              setStatusFilter(
+                statusFilter === "completed" ? "all" : "completed"
+              )
+            }
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              marginBottom: "8px",
+              cursor: "pointer",
+              border: "none",
+              background: "none",
+              padding: "2px 0",
+              opacity: statusFilter === "active" ? 0.4 : 1,
+              transition: "opacity 0.2s",
+            }}
+          >
+            <span
+              style={{
+                width: 12,
+                height: 16,
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <svg width="12" height="16" viewBox="0 0 12 16">
+                <path
+                  d="M6 0C2.7 0 0 2.7 0 6c0 4.5 6 10 6 10s6-5.5 6-10c0-3.3-2.7-6-6-6z"
+                  fill={PIN_COLORS.completed}
+                />
+                <circle cx="6" cy="6" r="2.5" fill="white" fillOpacity="0.9" />
+              </svg>
+            </span>
+            <span style={{ fontSize: "12px", color: "#374859", fontWeight: 600 }}>
+              Completed Projects
+            </span>
+            <span
+              style={{
+                fontSize: "11px",
+                color: "#999",
+                fontWeight: 400,
+              }}
+            >
+              ({completedCount})
+            </span>
+          </button>
+
+          {/* Country fill legend */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              borderTop: "1px solid #e8e8e8",
+              paddingTop: "6px",
+            }}
+          >
+            <span
+              style={{
+                width: 14,
+                height: 10,
+                background: COUNTRY_HIGHLIGHT,
+                border: "1px solid #9abb94",
+                borderRadius: "2px",
+                display: "inline-block",
+                flexShrink: 0,
+              }}
+            />
+            <span style={{ fontSize: "11px", color: "#999" }}>
+              Countries where CfC has worked
+            </span>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-function applyFog(m: mapboxgl.Map, mode: ViewMode) {
-  if (mode === "space") {
-    m.setFog({
-      color: "rgb(220, 230, 240)",
-      "high-color": "rgb(70, 130, 220)",
-      "horizon-blend": 0.03,
-      "space-color": "rgb(5, 5, 20)",
-      "star-intensity": 0.8,
-    });
-  } else if (mode === "globe") {
-    m.setFog({
-      color: "rgb(255, 255, 255)",
-      "high-color": "rgb(200, 210, 220)",
-      "horizon-blend": 0.04,
-      "space-color": "rgb(235, 238, 242)",
-      "star-intensity": 0,
-    });
-  } else if (mode === "dark") {
-    m.setFog({
-      color: "rgb(30, 30, 50)",
-      "high-color": "rgb(20, 20, 80)",
-      "horizon-blend": 0.03,
-      "space-color": "rgb(5, 5, 15)",
-      "star-intensity": 0.8,
-    });
-  } else {
-    m.setFog({} as any);
-  }
-}
-
-function StatBadge({
-  icon,
-  value,
-  label,
-  textColor,
-  mutedColor,
-}: {
-  icon: React.ReactNode;
-  value: string | number;
-  label?: string;
-  textColor?: string;
-  mutedColor?: string;
-}) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-      {icon}
-      <span style={{ fontWeight: 700, fontSize: "14px", color: textColor || "#374859" }}>
-        {value}
-      </span>
-      {label && (
-        <span style={{ fontSize: "11px", color: mutedColor || "#999" }}>{label}</span>
-      )}
-    </div>
-  );
-}
-
-function buildSinglePopupHTML(props: Record<string, any>, dark: boolean): string {
-  const color = props.color || "#999";
-  const bg = dark ? "#1a1a2e" : "white";
-  const text = dark ? "#e0e0e0" : "#374859";
-  const muted = dark ? "#888" : "#999";
-  const border = dark ? "#444" : "#d6d6d6";
+function buildSinglePopupHTML(props: Record<string, any>): string {
+  const isActive = props.status === "active";
+  const statusColor = isActive ? PIN_COLORS.active : PIN_COLORS.completed;
+  const statusLabel = isActive ? "Active" : "Completed";
   const yr =
     props.startYear && props.startYear > 0
       ? props.endYear && props.endYear > 0
@@ -581,47 +743,46 @@ function buildSinglePopupHTML(props: Record<string, any>, dark: boolean): string
         : `${props.startYear}\u2013Present`
       : "";
   return `
-    <div style="width:270px;border-radius:8px;background:${bg};box-shadow:0 4px 20px rgba(0,0,0,${dark ? "0.4" : "0.15"});overflow:hidden;border:1px solid ${border}">
-      <div style="height:5px;background:${color}"></div>
-      <div style="padding:14px">
-        <div style="font-weight:700;font-size:14px;color:${text};line-height:1.3">${props.partner}</div>
-        ${props.details ? `<div style="font-size:12px;color:${muted};margin-top:4px">${props.details}</div>` : ""}
-        <div style="display:flex;align-items:center;gap:12px;margin-top:8px;font-size:11px;color:${muted}">
-          ${props.city ? `<span>${props.city}${props.country ? `, ${props.country}` : ""}</span>` : ""}
+    <div style="width:270px;border-radius:8px;background:white;box-shadow:0 4px 20px rgba(0,0,0,0.15);overflow:hidden;border:1px solid #d6d6d6;font-family:Lato,sans-serif">
+      <div style="height:4px;background:${statusColor}"></div>
+      <div style="padding:12px 14px">
+        <div style="font-weight:700;font-size:14px;color:#374859;line-height:1.3">${props.partner}</div>
+        ${props.details ? `<div style="font-size:12px;color:#666;margin-top:4px;line-height:1.4">${props.details}</div>` : ""}
+        <div style="display:flex;align-items:center;gap:10px;margin-top:8px;font-size:11px;color:#999">
+          ${props.city ? `<span>${props.city}${props.country ? `, ${props.country}` : ""}</span>` : props.country ? `<span>${props.country}</span>` : ""}
           ${yr ? `<span>${yr}</span>` : ""}
         </div>
-        <div style="margin-top:8px">
-          <span style="display:inline-block;font-size:10px;padding:2px 10px;border-radius:9999px;color:white;background:${color}">${props.type}</span>
-          ${props.status === "active" ? `<span style="display:inline-block;font-size:10px;padding:2px 10px;border-radius:9999px;color:${text};background:${dark ? "#2a2a3e" : "#faf9f5"};margin-left:4px;border:1px solid ${border}">Active</span>` : ""}
+        <div style="margin-top:8px;display:flex;gap:6px;align-items:center">
+          <span style="display:inline-block;font-size:10px;padding:2px 10px;border-radius:9999px;color:white;background:${statusColor}">${statusLabel}</span>
+          ${props.type ? `<span style="display:inline-block;font-size:10px;padding:2px 10px;border-radius:9999px;color:#374859;background:#faf9f5;border:1px solid #d6d6d6">${props.type}</span>` : ""}
         </div>
       </div>
     </div>
   `;
 }
 
-function buildMultiPopupHTML(propsList: Record<string, any>[], dark: boolean): string {
+function buildMultiPopupHTML(propsList: Record<string, any>[]): string {
   const first = propsList[0];
-  const bg = dark ? "#1a1a2e" : "white";
-  const headerBg = dark ? "#cb463a" : "#374859";
-  const text = dark ? "#e0e0e0" : "#374859";
-  const muted = dark ? "#888" : "#999";
-  const border = dark ? "#444" : "#d6d6d6";
-  const divider = dark ? "#333" : "#eee";
-
   const items = propsList
     .map((p) => {
+      const isActive = p.status === "active";
+      const statusColor = isActive ? PIN_COLORS.active : PIN_COLORS.completed;
+      const statusLabel = isActive ? "Active" : "Completed";
       return `
-      <div style="padding:10px 14px;border-bottom:1px solid ${divider}">
-        <div style="font-weight:700;font-size:13px;color:${text}">${p.partner}</div>
-        ${p.details ? `<div style="font-size:11px;color:${muted};margin-top:2px">${p.details}</div>` : ""}
-        <span style="display:inline-block;font-size:10px;padding:1px 8px;border-radius:9999px;color:white;background:${p.color || "#999"};margin-top:4px">${p.type}</span>
+      <div style="padding:10px 14px;border-bottom:1px solid #eee">
+        <div style="font-weight:700;font-size:13px;color:#374859">${p.partner}</div>
+        ${p.details ? `<div style="font-size:11px;color:#666;margin-top:2px">${p.details}</div>` : ""}
+        <div style="margin-top:4px;display:flex;gap:4px">
+          <span style="display:inline-block;font-size:9px;padding:1px 8px;border-radius:9999px;color:white;background:${statusColor}">${statusLabel}</span>
+          ${p.type ? `<span style="display:inline-block;font-size:9px;padding:1px 8px;border-radius:9999px;color:#374859;background:#faf9f5;border:1px solid #d6d6d6">${p.type}</span>` : ""}
+        </div>
       </div>`;
     })
     .join("");
 
   return `
-    <div style="width:270px;max-height:350px;overflow-y:auto;border-radius:8px;background:${bg};box-shadow:0 4px 20px rgba(0,0,0,${dark ? "0.4" : "0.15"});border:1px solid ${border}">
-      <div style="padding:10px 14px;background:${headerBg};color:white;font-weight:700;font-size:13px;position:sticky;top:0;z-index:1">
+    <div style="width:270px;max-height:350px;overflow-y:auto;border-radius:8px;background:white;box-shadow:0 4px 20px rgba(0,0,0,0.15);border:1px solid #d6d6d6;font-family:Lato,sans-serif">
+      <div style="padding:10px 14px;background:#374859;color:white;font-weight:700;font-size:13px;position:sticky;top:0;z-index:1">
         ${propsList.length} Projects \u2014 ${first.city || first.country || ""}
       </div>
       ${items}
