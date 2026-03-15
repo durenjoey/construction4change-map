@@ -119,11 +119,11 @@ export function WhereWeWorkMapCards({ hubs }: Props) {
       }
       activeMatch.push("rgba(0,0,0,0)");
 
-      mapInstance.setPaintProperty("hub-coverage-fill", "fill-color", coverageMatch);
+      mapInstance.setPaintProperty("hub-coverage-fill", "fill-color", coverageMatch as any);
       mapInstance.setPaintProperty("hub-coverage-fill", "fill-opacity", 0.35);
-      mapInstance.setPaintProperty("hub-active-fill", "fill-color", activeMatch);
+      mapInstance.setPaintProperty("hub-active-fill", "fill-color", activeMatch as any);
       mapInstance.setPaintProperty("hub-active-fill", "fill-opacity", 0.5);
-      mapInstance.setPaintProperty("hub-active-border", "line-color", activeMatch);
+      mapInstance.setPaintProperty("hub-active-border", "line-color", activeMatch as any);
     } else {
       const hub = hubs.find((h) => h.id === hubId)!;
 
@@ -140,11 +140,11 @@ export function WhereWeWorkMapCards({ hubs }: Props) {
       }
       activeMatch.push("rgba(0,0,0,0)");
 
-      mapInstance.setPaintProperty("hub-coverage-fill", "fill-color", coverageMatch);
+      mapInstance.setPaintProperty("hub-coverage-fill", "fill-color", coverageMatch as any);
       mapInstance.setPaintProperty("hub-coverage-fill", "fill-opacity", 0.5);
-      mapInstance.setPaintProperty("hub-active-fill", "fill-color", activeMatch);
+      mapInstance.setPaintProperty("hub-active-fill", "fill-color", activeMatch as any);
       mapInstance.setPaintProperty("hub-active-fill", "fill-opacity", 0.65);
-      mapInstance.setPaintProperty("hub-active-border", "line-color", activeMatch);
+      mapInstance.setPaintProperty("hub-active-border", "line-color", activeMatch as any);
     }
   }
 

@@ -127,8 +127,8 @@ export function WhereWeWorkScroll({ hubs }: Props) {
       }
       activeMatch.push("rgba(0,0,0,0)");
 
-      mapInstance.setPaintProperty("hub-coverage-fill", "fill-color", coverageMatch);
-      mapInstance.setPaintProperty("hub-active-fill", "fill-color", activeMatch);
+      mapInstance.setPaintProperty("hub-coverage-fill", "fill-color", coverageMatch as any);
+      mapInstance.setPaintProperty("hub-active-fill", "fill-color", activeMatch as any);
     } else {
       // Focus single hub
       const coverageMatch: any[] = ["match", ["get", "iso_3166_1_alpha_3"]];
@@ -143,8 +143,8 @@ export function WhereWeWorkScroll({ hubs }: Props) {
       }
       activeMatch.push("rgba(0,0,0,0)");
 
-      mapInstance.setPaintProperty("hub-coverage-fill", "fill-color", coverageMatch);
-      mapInstance.setPaintProperty("hub-active-fill", "fill-color", activeMatch);
+      mapInstance.setPaintProperty("hub-coverage-fill", "fill-color", coverageMatch as any);
+      mapInstance.setPaintProperty("hub-active-fill", "fill-color", activeMatch as any);
     }
 
     mapInstance.flyTo({ ...view, duration: 1500, essential: true });
