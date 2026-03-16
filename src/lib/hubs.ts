@@ -54,8 +54,9 @@ export const HUBS: Hub[] = [
       "Dominican Republic",
       "Bolivia",
       "Haiti",
+      "Honduras",
     ],
-    activeIsoCodes: ["PRI", "VIR", "VGB", "DMA", "DOM", "BOL", "HTI"],
+    activeIsoCodes: ["PRI", "VIR", "VGB", "DMA", "DOM", "BOL", "HTI", "HND"],
     coverageIsoCodes: [
       "PRI", "VIR", "VGB", "DMA", "DOM", "BOL", "HTI",
       "JAM", "TTO", "BRB", "GRD", "ATG", "KNA", "LCA", "VCT",
@@ -108,8 +109,9 @@ export const HUBS: Hub[] = [
       "Zambia",
       "Malawi",
       "South Africa",
+      "South Sudan",
     ],
-    activeIsoCodes: ["KEN", "UGA", "RWA", "ZMB", "MWI", "ZAF"],
+    activeIsoCodes: ["KEN", "UGA", "RWA", "ZMB", "MWI", "ZAF", "SSD"],
     coverageIsoCodes: [
       "KEN", "UGA", "RWA", "ZMB", "MWI", "ZAF",
       "TZA", "ETH", "SOM", "MOZ", "ZWE", "BWA", "NAM", "AGO",

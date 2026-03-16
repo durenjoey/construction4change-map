@@ -29,6 +29,8 @@ const CFC_COUNTRY_CODES = [
   "VIR", // USVI
   "UGA", // Uganda
   "ZMB", // Zambia
+  "HND", // Honduras (active precon)
+  "SSD", // South Sudan (active precon)
 ];
 
 const PIN_COLORS = {
@@ -739,7 +741,9 @@ function buildSinglePopupHTML(props: Record<string, any>): string {
   const yr =
     props.startYear && props.startYear > 0
       ? props.endYear && props.endYear > 0
-        ? `${props.startYear}\u2013${props.endYear}`
+        ? props.startYear === props.endYear
+          ? `${props.startYear}`
+          : `${props.startYear}\u2013${props.endYear}`
         : `${props.startYear}\u2013Present`
       : "";
   return `
