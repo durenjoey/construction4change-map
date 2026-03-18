@@ -167,7 +167,7 @@ export function HeroGlobe({ projects }: HeroGlobeProps) {
             textShadow: "0 1px 10px rgba(0,0,0,0.3)",
           }}
         >
-          Since 2008, we have partnered with organizations across 22 countries to deliver schools, clinics, and community infrastructure where it is needed most.
+          Since 2008, we have partnered with organizations across 24 countries to deliver schools, clinics, and community infrastructure where it is needed most.
         </p>
         <div
           style={{

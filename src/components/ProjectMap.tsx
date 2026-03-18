@@ -353,10 +353,9 @@ export function ProjectMap({ projects }: ProjectMapProps) {
 
       const popup = new mapboxgl.Popup({
         closeOnClick: false,
-        closeButton: true,
+        closeButton: false,
         maxWidth: "360px",
         offset: 20,
-        className: "pinned-popup",
       })
         .setLngLat(coords)
         .setHTML(html)
