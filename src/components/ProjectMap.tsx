@@ -52,6 +52,7 @@ export function ProjectMap({ projects }: ProjectMapProps) {
   const [mapReady, setMapReady] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "completed">("all");
+  const [legendOpen, setLegendOpen] = useState(false);
 
   const mappableProjects = projects.filter((p) => p.lat && p.lng);
 
@@ -478,9 +479,10 @@ export function ProjectMap({ projects }: ProjectMapProps) {
       style={{
         display: "flex",
         flexDirection: "column",
-        height: "calc(100vh - 48px)",
+        height: "calc(100dvh - 48px)",
         marginTop: "48px",
         width: "100%",
+        overflow: "hidden",
       }}
     >
       {/* Map */}
@@ -611,7 +613,7 @@ export function ProjectMap({ projects }: ProjectMapProps) {
           </div>
         </div>
 
-        {/* Bottom-left: Legend */}
+        {/* Bottom-left: Legend (collapsible on mobile) */}
         <div
           style={{
             position: "absolute",
@@ -620,149 +622,184 @@ export function ProjectMap({ projects }: ProjectMapProps) {
             zIndex: 5,
             background: "rgba(255,255,255,0.95)",
             borderRadius: "10px",
-            padding: "12px 16px",
             boxShadow: "0 2px 12px rgba(0,0,0,0.1)",
             border: "1px solid #d6d6d6",
             fontFamily: "var(--font-lato), Lato, sans-serif",
+            overflow: "hidden",
           }}
         >
-          <div
+          {/* Legend toggle header */}
+          <button
+            onClick={() => setLegendOpen(!legendOpen)}
             style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              width: "100%",
+              padding: "10px 14px",
+              border: "none",
+              background: "none",
+              cursor: "pointer",
               fontSize: "10px",
               fontWeight: 700,
               textTransform: "uppercase",
               letterSpacing: "1.5px",
               color: "#999",
-              marginBottom: "8px",
             }}
           >
-            Legend
-          </div>
-
-          {/* Active pin */}
-          <button
-            onClick={() =>
-              setStatusFilter(statusFilter === "active" ? "all" : "active")
-            }
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              marginBottom: "6px",
-              cursor: "pointer",
-              border: "none",
-              background: "none",
-              padding: "2px 0",
-              opacity: statusFilter === "completed" ? 0.4 : 1,
-              transition: "opacity 0.2s",
-            }}
-          >
-            <span
+            <span>Legend</span>
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 10 10"
+              fill="none"
+              stroke="#999"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
               style={{
-                width: 12,
-                height: 16,
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
+                transform: legendOpen ? "rotate(180deg)" : "rotate(0deg)",
+                transition: "transform 0.2s",
               }}
             >
-              <svg width="12" height="16" viewBox="0 0 12 16">
-                <path
-                  d="M6 0C2.7 0 0 2.7 0 6c0 4.5 6 10 6 10s6-5.5 6-10c0-3.3-2.7-6-6-6z"
-                  fill={PIN_COLORS.active}
-                />
-                <circle cx="6" cy="6" r="2.5" fill="white" fillOpacity="0.9" />
-              </svg>
-            </span>
-            <span style={{ fontSize: "12px", color: "#374859", fontWeight: 600 }}>
-              Active Projects
-            </span>
-            <span
-              style={{
-                fontSize: "11px",
-                color: "#999",
-                fontWeight: 400,
-              }}
-            >
-              ({activeCount})
-            </span>
+              <path d="M2 4l3 3 3-3" />
+            </svg>
           </button>
 
-          {/* Completed pin */}
-          <button
-            onClick={() =>
-              setStatusFilter(
-                statusFilter === "completed" ? "all" : "completed"
-              )
-            }
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              marginBottom: "8px",
-              cursor: "pointer",
-              border: "none",
-              background: "none",
-              padding: "2px 0",
-              opacity: statusFilter === "active" ? 0.4 : 1,
-              transition: "opacity 0.2s",
-            }}
-          >
-            <span
-              style={{
-                width: 12,
-                height: 16,
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <svg width="12" height="16" viewBox="0 0 12 16">
-                <path
-                  d="M6 0C2.7 0 0 2.7 0 6c0 4.5 6 10 6 10s6-5.5 6-10c0-3.3-2.7-6-6-6z"
-                  fill={PIN_COLORS.completed}
-                />
-                <circle cx="6" cy="6" r="2.5" fill="white" fillOpacity="0.9" />
-              </svg>
-            </span>
-            <span style={{ fontSize: "12px", color: "#374859", fontWeight: 600 }}>
-              Completed Projects
-            </span>
-            <span
-              style={{
-                fontSize: "11px",
-                color: "#999",
-                fontWeight: 400,
-              }}
-            >
-              ({completedCount})
-            </span>
-          </button>
-
-          {/* Country fill legend */}
+          {/* Legend content */}
           <div
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              borderTop: "1px solid #e8e8e8",
-              paddingTop: "6px",
+              maxHeight: legendOpen ? "200px" : "0px",
+              overflow: "hidden",
+              transition: "max-height 0.25s ease",
+              padding: legendOpen ? "0 14px 10px" : "0 14px",
             }}
           >
-            <span
+            {/* Active pin */}
+            <button
+              onClick={() =>
+                setStatusFilter(statusFilter === "active" ? "all" : "active")
+              }
               style={{
-                width: 14,
-                height: 10,
-                background: COUNTRY_HIGHLIGHT,
-                border: "1px solid #9abb94",
-                borderRadius: "2px",
-                display: "inline-block",
-                flexShrink: 0,
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                marginBottom: "6px",
+                cursor: "pointer",
+                border: "none",
+                background: "none",
+                padding: "2px 0",
+                opacity: statusFilter === "completed" ? 0.4 : 1,
+                transition: "opacity 0.2s",
               }}
-            />
-            <span style={{ fontSize: "11px", color: "#999" }}>
-              Countries where CfC has worked
-            </span>
+            >
+              <span
+                style={{
+                  width: 12,
+                  height: 16,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <svg width="12" height="16" viewBox="0 0 12 16">
+                  <path
+                    d="M6 0C2.7 0 0 2.7 0 6c0 4.5 6 10 6 10s6-5.5 6-10c0-3.3-2.7-6-6-6z"
+                    fill={PIN_COLORS.active}
+                  />
+                  <circle cx="6" cy="6" r="2.5" fill="white" fillOpacity="0.9" />
+                </svg>
+              </span>
+              <span style={{ fontSize: "12px", color: "#374859", fontWeight: 600 }}>
+                Active Projects
+              </span>
+              <span
+                style={{
+                  fontSize: "11px",
+                  color: "#999",
+                  fontWeight: 400,
+                }}
+              >
+                ({activeCount})
+              </span>
+            </button>
+
+            {/* Completed pin */}
+            <button
+              onClick={() =>
+                setStatusFilter(
+                  statusFilter === "completed" ? "all" : "completed"
+                )
+              }
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                marginBottom: "8px",
+                cursor: "pointer",
+                border: "none",
+                background: "none",
+                padding: "2px 0",
+                opacity: statusFilter === "active" ? 0.4 : 1,
+                transition: "opacity 0.2s",
+              }}
+            >
+              <span
+                style={{
+                  width: 12,
+                  height: 16,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <svg width="12" height="16" viewBox="0 0 12 16">
+                  <path
+                    d="M6 0C2.7 0 0 2.7 0 6c0 4.5 6 10 6 10s6-5.5 6-10c0-3.3-2.7-6-6-6z"
+                    fill={PIN_COLORS.completed}
+                  />
+                  <circle cx="6" cy="6" r="2.5" fill="white" fillOpacity="0.9" />
+                </svg>
+              </span>
+              <span style={{ fontSize: "12px", color: "#374859", fontWeight: 600 }}>
+                Completed Projects
+              </span>
+              <span
+                style={{
+                  fontSize: "11px",
+                  color: "#999",
+                  fontWeight: 400,
+                }}
+              >
+                ({completedCount})
+              </span>
+            </button>
+
+            {/* Country fill legend */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                borderTop: "1px solid #e8e8e8",
+                paddingTop: "6px",
+              }}
+            >
+              <span
+                style={{
+                  width: 14,
+                  height: 10,
+                  background: COUNTRY_HIGHLIGHT,
+                  border: "1px solid #9abb94",
+                  borderRadius: "2px",
+                  display: "inline-block",
+                  flexShrink: 0,
+                }}
+              />
+              <span style={{ fontSize: "11px", color: "#999" }}>
+                Countries where CfC has worked
+              </span>
+            </div>
           </div>
         </div>
       </div>
