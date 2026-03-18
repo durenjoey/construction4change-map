@@ -48,6 +48,7 @@ export function ProjectMap({ projects }: ProjectMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const popupRef = useRef<mapboxgl.Popup | null>(null);
+  const pinnedRef = useRef(false);
   const [mapReady, setMapReady] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "completed">("all");
@@ -287,15 +288,15 @@ export function ProjectMap({ projects }: ProjectMapProps) {
   }
 
   function setupInteractions(mapInstance: mapboxgl.Map) {
-    // Hover on pins — show popup
+    // Hover on pins — show lightweight popup (only if nothing pinned)
     mapInstance.on("mouseenter", "project-pins", (e) => {
       mapInstance.getCanvas().style.cursor = "pointer";
+      if (pinnedRef.current) return; // don't override pinned popup
       if (!e.features?.length) return;
 
       const feat = e.features[0];
       const coords = (feat.geometry as GeoJSON.Point).coordinates.slice() as [number, number];
 
-      // Check for nearby pins at same location
       const point = e.point;
       const nearby = mapInstance.queryRenderedFeatures(
         [[point.x - 8, point.y - 8], [point.x + 8, point.y + 8]],
@@ -307,12 +308,12 @@ export function ProjectMap({ projects }: ProjectMapProps) {
       const html =
         nearby.length > 1
           ? buildMultiPopupHTML(nearby.map((f) => f.properties!))
-          : buildSinglePopupHTML(feat.properties!);
+          : buildPinnedPopupHTML(feat.properties!);
 
       const popup = new mapboxgl.Popup({
         closeOnClick: false,
         closeButton: false,
-        maxWidth: "300px",
+        maxWidth: "360px",
         offset: 20,
       })
         .setLngLat(coords)
@@ -324,16 +325,51 @@ export function ProjectMap({ projects }: ProjectMapProps) {
 
     mapInstance.on("mouseleave", "project-pins", () => {
       mapInstance.getCanvas().style.cursor = "";
+      if (pinnedRef.current) return; // don't close pinned popup
       if (popupRef.current) {
         popupRef.current.remove();
         popupRef.current = null;
       }
     });
 
-    // Click pin — fly to and keep popup
+    // Click pin — pin the popup open with full detail card
     mapInstance.on("click", "project-pins", (e) => {
       if (!e.features?.length) return;
-      const coords = (e.features[0].geometry as GeoJSON.Point).coordinates.slice() as [number, number];
+      const feat = e.features[0];
+      const coords = (feat.geometry as GeoJSON.Point).coordinates.slice() as [number, number];
+
+      const point = e.point;
+      const nearby = mapInstance.queryRenderedFeatures(
+        [[point.x - 8, point.y - 8], [point.x + 8, point.y + 8]],
+        { layers: ["project-pins"] }
+      );
+
+      if (popupRef.current) popupRef.current.remove();
+
+      const html =
+        nearby.length > 1
+          ? buildMultiPopupHTML(nearby.map((f) => f.properties!))
+          : buildPinnedPopupHTML(feat.properties!);
+
+      const popup = new mapboxgl.Popup({
+        closeOnClick: false,
+        closeButton: true,
+        maxWidth: "360px",
+        offset: 20,
+        className: "pinned-popup",
+      })
+        .setLngLat(coords)
+        .setHTML(html)
+        .addTo(mapInstance);
+
+      popup.on("close", () => {
+        pinnedRef.current = false;
+        popupRef.current = null;
+      });
+
+      popupRef.current = popup;
+      pinnedRef.current = true;
+
       mapInstance.flyTo({
         center: coords,
         zoom: Math.max(mapInstance.getZoom(), 6),
@@ -372,6 +408,7 @@ export function ProjectMap({ projects }: ProjectMapProps) {
       if (!pins.length && popupRef.current) {
         popupRef.current.remove();
         popupRef.current = null;
+        pinnedRef.current = false;
       }
     });
   }
@@ -734,31 +771,57 @@ export function ProjectMap({ projects }: ProjectMapProps) {
   );
 }
 
-function buildSinglePopupHTML(props: Record<string, any>): string {
+function formatYear(props: Record<string, any>): string {
+  return props.startYear && props.startYear > 0
+    ? props.endYear && props.endYear > 0
+      ? props.startYear === props.endYear
+        ? `${props.startYear}`
+        : `${props.startYear}\u2013${props.endYear}`
+      : `${props.startYear}\u2013Present`
+    : "";
+}
+
+/** Full detail popup — photo placeholder, stats, type */
+function buildPinnedPopupHTML(props: Record<string, any>): string {
   const isActive = props.status === "active";
   const statusColor = isActive ? PIN_COLORS.active : PIN_COLORS.completed;
   const statusLabel = isActive ? "Active" : "Completed";
-  const yr =
-    props.startYear && props.startYear > 0
-      ? props.endYear && props.endYear > 0
-        ? props.startYear === props.endYear
-          ? `${props.startYear}`
-          : `${props.startYear}\u2013${props.endYear}`
-        : `${props.startYear}\u2013Present`
-      : "";
+  const yr = formatYear(props);
+  const location = [props.city, props.country].filter(Boolean).join(", ");
   return `
-    <div style="width:270px;border-radius:8px;background:white;box-shadow:0 4px 20px rgba(0,0,0,0.15);overflow:hidden;border:1px solid #d6d6d6;font-family:Lato,sans-serif">
-      <div style="height:4px;background:${statusColor}"></div>
-      <div style="padding:12px 14px">
-        <div style="font-weight:700;font-size:14px;color:#374859;line-height:1.3">${props.partner}</div>
-        ${props.details ? `<div style="font-size:12px;color:#666;margin-top:4px;line-height:1.4">${props.details}</div>` : ""}
-        <div style="display:flex;align-items:center;gap:10px;margin-top:8px;font-size:11px;color:#999">
-          ${props.city ? `<span>${props.city}${props.country ? `, ${props.country}` : ""}</span>` : props.country ? `<span>${props.country}</span>` : ""}
-          ${yr ? `<span>${yr}</span>` : ""}
+    <div style="width:320px;border-radius:10px;background:white;box-shadow:0 6px 24px rgba(0,0,0,0.18);overflow:hidden;border:1px solid #d6d6d6;font-family:Lato,sans-serif">
+      <div style="height:160px;background:linear-gradient(135deg,#e8e4df 0%,#d4d0cb 100%);display:flex;align-items:center;justify-content:center;position:relative">
+        <div style="text-align:center;color:#999;font-size:12px">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:4px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+          <div>Photo coming soon</div>
         </div>
-        <div style="margin-top:8px;display:flex;gap:6px;align-items:center">
-          <span style="display:inline-block;font-size:10px;padding:2px 10px;border-radius:9999px;color:white;background:${statusColor}">${statusLabel}</span>
-          ${props.type ? `<span style="display:inline-block;font-size:10px;padding:2px 10px;border-radius:9999px;color:#374859;background:#faf9f5;border:1px solid #d6d6d6">${props.type}</span>` : ""}
+        <div style="position:absolute;top:10px;right:10px">
+          <span style="display:inline-block;font-size:10px;padding:3px 10px;border-radius:9999px;color:white;background:${statusColor};font-weight:600">${statusLabel}</span>
+        </div>
+      </div>
+      <div style="padding:14px 16px">
+        <div style="font-weight:700;font-size:16px;color:#374859;line-height:1.3">${props.partner}</div>
+        ${props.details ? `<div style="font-size:13px;color:#666;margin-top:6px;line-height:1.4">${props.details}</div>` : ""}
+        <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          ${location ? `
+          <div style="background:#f8f7f4;border-radius:6px;padding:8px 10px">
+            <div style="font-size:10px;color:#999;text-transform:uppercase;letter-spacing:0.5px">Location</div>
+            <div style="font-size:13px;color:#374859;font-weight:600;margin-top:2px">${location}</div>
+          </div>` : ""}
+          ${yr ? `
+          <div style="background:#f8f7f4;border-radius:6px;padding:8px 10px">
+            <div style="font-size:10px;color:#999;text-transform:uppercase;letter-spacing:0.5px">Year</div>
+            <div style="font-size:13px;color:#374859;font-weight:600;margin-top:2px">${yr}</div>
+          </div>` : ""}
+          ${props.type ? `
+          <div style="background:#f8f7f4;border-radius:6px;padding:8px 10px">
+            <div style="font-size:10px;color:#999;text-transform:uppercase;letter-spacing:0.5px">Sector</div>
+            <div style="font-size:13px;color:#374859;font-weight:600;margin-top:2px">${props.type}</div>
+          </div>` : ""}
+          <div style="background:#f8f7f4;border-radius:6px;padding:8px 10px">
+            <div style="font-size:10px;color:#999;text-transform:uppercase;letter-spacing:0.5px">Status</div>
+            <div style="font-size:13px;font-weight:600;margin-top:2px;color:${statusColor}">${statusLabel}</div>
+          </div>
         </div>
       </div>
     </div>
