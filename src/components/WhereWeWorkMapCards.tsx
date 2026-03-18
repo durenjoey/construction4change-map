@@ -6,11 +6,11 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { Hub } from "@/lib/hubs";
 
 const HUB_CENTERS: Record<string, { center: [number, number]; zoom: number }> = {
-  "usa-pacific": { center: [-122.3, 47.6], zoom: 4 },
+  "north-america": { center: [-122.3, 47.6], zoom: 4 },
   "latin-caribbean": { center: [-70, 18], zoom: 3.5 },
   "west-africa": { center: [-5, 8], zoom: 4 },
-  "east-southern-africa": { center: [32, -2], zoom: 3.5 },
-  "south-asia-pacific": { center: [85, 20], zoom: 3.2 },
+  "east-south-africa": { center: [32, -2], zoom: 3.5 },
+  "asia-pacific": { center: [85, 20], zoom: 3.2 },
 };
 
 interface Props {
