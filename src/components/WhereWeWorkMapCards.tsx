@@ -5,6 +5,14 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { Hub } from "@/lib/hubs";
 
+const HUB_CENTERS: Record<string, { center: [number, number]; zoom: number }> = {
+  "usa-pacific": { center: [-122.3, 47.6], zoom: 4 },
+  "latin-caribbean": { center: [-70, 18], zoom: 3.5 },
+  "west-africa": { center: [-5, 8], zoom: 4 },
+  "east-southern-africa": { center: [32, -2], zoom: 3.5 },
+  "south-asia-pacific": { center: [85, 20], zoom: 3.2 },
+};
+
 interface Props {
   hubs: Hub[];
 }
@@ -190,6 +198,25 @@ export function WhereWeWorkMapCards({ hubs }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeHub, mapReady]);
 
+  function selectHub(hubId: string) {
+    const isMobile = window.innerWidth < 768;
+    if (activeHub === hubId) {
+      setActiveHub(null);
+      if (map.current) {
+        map.current.flyTo({ center: [20, 10], zoom: 1.8, duration: 1200 });
+      }
+    } else {
+      setActiveHub(hubId);
+      const target = HUB_CENTERS[hubId];
+      if (target && map.current) {
+        map.current.flyTo({ ...target, duration: 1200, essential: true });
+      }
+      if (isMobile && mapContainer.current) {
+        mapContainer.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+  }
+
   return (
     <div>
       {/* Hero */}
@@ -250,9 +277,9 @@ export function WhereWeWorkMapCards({ hubs }: Props) {
         {hubs.map((hub) => (
           <button
             key={hub.id}
-            onMouseEnter={() => setActiveHub(hub.id)}
-            onMouseLeave={() => setActiveHub(null)}
-            onClick={() => setActiveHub(activeHub === hub.id ? null : hub.id)}
+            onMouseEnter={() => { if (window.innerWidth >= 768) setActiveHub(hub.id); }}
+            onMouseLeave={() => { if (window.innerWidth >= 768) setActiveHub(null); }}
+            onClick={() => selectHub(hub.id)}
             style={{
               display: "flex",
               alignItems: "center",
@@ -301,9 +328,11 @@ export function WhereWeWorkMapCards({ hubs }: Props) {
         {hubs.map((hub) => (
           <div
             key={hub.id}
-            onMouseEnter={() => setActiveHub(hub.id)}
-            onMouseLeave={() => setActiveHub(null)}
+            onMouseEnter={() => { if (window.innerWidth >= 768) setActiveHub(hub.id); }}
+            onMouseLeave={() => { if (window.innerWidth >= 768) setActiveHub(null); }}
+            onClick={() => selectHub(hub.id)}
             style={{
+              cursor: "pointer",
               borderRadius: "12px",
               border: `1px solid ${activeHub === hub.id ? hub.color : "#d6d6d6"}`,
               overflow: "hidden",
