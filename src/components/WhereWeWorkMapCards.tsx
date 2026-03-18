@@ -277,8 +277,6 @@ export function WhereWeWorkMapCards({ hubs }: Props) {
         {hubs.map((hub) => (
           <button
             key={hub.id}
-            onMouseEnter={() => { if (window.innerWidth >= 768) setActiveHub(hub.id); }}
-            onMouseLeave={() => { if (window.innerWidth >= 768) setActiveHub(null); }}
             onClick={() => selectHub(hub.id)}
             style={{
               display: "flex",
@@ -328,8 +326,6 @@ export function WhereWeWorkMapCards({ hubs }: Props) {
         {hubs.map((hub) => (
           <div
             key={hub.id}
-            onMouseEnter={() => { if (window.innerWidth >= 768) setActiveHub(hub.id); }}
-            onMouseLeave={() => { if (window.innerWidth >= 768) setActiveHub(null); }}
             onClick={() => selectHub(hub.id)}
             style={{
               cursor: "pointer",
