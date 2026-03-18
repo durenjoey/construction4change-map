@@ -6,11 +6,11 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { Hub } from "@/lib/hubs";
 
 const HUB_CENTERS: Record<string, { center: [number, number]; zoom: number }> = {
-  "north-america": { center: [-122.3, 47.6], zoom: 4 },
-  "latin-caribbean": { center: [-70, 18], zoom: 3.5 },
-  "west-africa": { center: [-5, 8], zoom: 4 },
-  "east-south-africa": { center: [32, -2], zoom: 3.5 },
-  "asia-pacific": { center: [85, 20], zoom: 3.2 },
+  "north-america": { center: [-100, 40], zoom: 2.8 },
+  "latin-caribbean": { center: [-70, 15], zoom: 2.5 },
+  "west-africa": { center: [-2, 10], zoom: 3 },
+  "east-south-africa": { center: [30, -5], zoom: 2.8 },
+  "asia-pacific": { center: [90, 15], zoom: 2.5 },
 };
 
 interface Props {
@@ -202,17 +202,19 @@ export function WhereWeWorkMapCards({ hubs }: Props) {
     const isMobile = window.innerWidth < 768;
     if (activeHub === hubId) {
       setActiveHub(null);
-      if (map.current) {
+      if (isMobile && map.current) {
         map.current.flyTo({ center: [20, 10], zoom: 1.8, duration: 1200 });
       }
     } else {
       setActiveHub(hubId);
-      const target = HUB_CENTERS[hubId];
-      if (target && map.current) {
-        map.current.flyTo({ ...target, duration: 1200, essential: true });
-      }
-      if (isMobile && mapContainer.current) {
-        mapContainer.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      if (isMobile) {
+        const target = HUB_CENTERS[hubId];
+        if (target && map.current) {
+          map.current.flyTo({ ...target, duration: 1200, essential: true });
+        }
+        if (mapContainer.current) {
+          mapContainer.current.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
       }
     }
   }
