@@ -479,8 +479,7 @@ export function ProjectMap({ projects }: ProjectMapProps) {
       style={{
         display: "flex",
         flexDirection: "column",
-        height: "calc(100dvh - 48px)",
-        marginTop: "48px",
+        height: "100dvh",
         width: "100%",
         overflow: "hidden",
       }}
@@ -553,64 +552,6 @@ export function ProjectMap({ projects }: ProjectMapProps) {
             </div>
           </div>
 
-          {/* Search */}
-          <div
-            style={{
-              background: "rgba(255,255,255,0.95)",
-              borderRadius: "10px",
-              padding: "8px 12px",
-              boxShadow: "0 2px 12px rgba(0,0,0,0.1)",
-              border: "1px solid #d6d6d6",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#999"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <path d="M21 21l-4.35-4.35" />
-            </svg>
-            <input
-              type="text"
-              placeholder="Search partner, city, or country..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                border: "none",
-                outline: "none",
-                fontSize: "13px",
-                fontFamily: "var(--font-lato), Lato, sans-serif",
-                color: "#374859",
-                background: "transparent",
-                width: "220px",
-              }}
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                style={{
-                  border: "none",
-                  background: "none",
-                  cursor: "pointer",
-                  color: "#999",
-                  fontSize: "16px",
-                  lineHeight: 1,
-                  padding: "0 2px",
-                }}
-              >
-                &times;
-              </button>
-            )}
-          </div>
         </div>
 
         {/* Bottom-left: Legend (collapsible on mobile) */}
