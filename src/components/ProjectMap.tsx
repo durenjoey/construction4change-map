@@ -442,7 +442,7 @@ export function ProjectMap({ projects }: ProjectMapProps) {
 
     mapInstance.addControl(
       new mapboxgl.NavigationControl({ showCompass: false }),
-      "top-right"
+      "bottom-right"
     );
 
     mapInstance.on("load", () => {
@@ -533,25 +533,40 @@ export function ProjectMap({ projects }: ProjectMapProps) {
             style={{
               background: "rgba(255,255,255,0.95)",
               borderRadius: "10px",
-              padding: "12px 16px",
+              padding: "10px 14px",
               boxShadow: "0 2px 12px rgba(0,0,0,0.1)",
               border: "1px solid #d6d6d6",
-              display: "flex",
-              gap: "20px",
+              display: "grid",
+              gridTemplateColumns: "auto auto auto auto",
+              gap: "12px",
               alignItems: "center",
               fontFamily: "var(--font-lato), Lato, sans-serif",
             }}
+            className="stats-bar"
           >
             <div>
               <span style={{ fontWeight: 700, fontSize: "18px", color: "#374859" }}>
-                {totalProjects}
+                {completedCount}
               </span>
               <span style={{ fontSize: "11px", color: "#999", marginLeft: "4px" }}>
-                Projects
+                Closed
               </span>
             </div>
             <div
               style={{ width: "1px", height: "20px", background: "#d6d6d6" }}
+              className="stats-divider"
+            />
+            <div>
+              <span style={{ fontWeight: 700, fontSize: "18px", color: "#374859" }}>
+                {activeCount}
+              </span>
+              <span style={{ fontSize: "11px", color: "#999", marginLeft: "4px" }}>
+                Active
+              </span>
+            </div>
+            <div
+              style={{ width: "1px", height: "20px", background: "#d6d6d6" }}
+              className="stats-divider"
             />
             <div>
               <span style={{ fontWeight: 700, fontSize: "18px", color: "#374859" }}>
@@ -563,6 +578,7 @@ export function ProjectMap({ projects }: ProjectMapProps) {
             </div>
             <div
               style={{ width: "1px", height: "20px", background: "#d6d6d6" }}
+              className="stats-divider"
             />
             <div>
               <span style={{ fontWeight: 600, fontSize: "13px", color: "#374859" }}>

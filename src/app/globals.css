@@ -190,3 +190,15 @@
 .mapboxgl-ctrl-bottom-right .mapboxgl-ctrl-attrib {
   display: none !important;
 }
+
+/* Stats bar mobile */
+@media (max-width: 520px) {
+  .stats-bar {
+    grid-template-columns: auto auto !important;
+    gap: 6px 12px !important;
+    padding: 8px 12px !important;
+  }
+  .stats-bar .stats-divider {
+    display: none !important;
+  }
+}
