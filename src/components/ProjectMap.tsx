@@ -320,7 +320,7 @@ export function ProjectMap({ projects }: ProjectMapProps) {
         .addTo(mapInstance);
 
       if (isList) {
-        buildMultiPopupHTML(nearbyProps, popup.getElement());
+        attachMultiPopupListeners(popup.getElement()!, nearbyProps);
       }
 
       popupRef.current = popup;
@@ -363,7 +363,7 @@ export function ProjectMap({ projects }: ProjectMapProps) {
         .addTo(mapInstance);
 
       if (isList) {
-        buildMultiPopupHTML(nearbyProps, popup.getElement());
+        attachMultiPopupListeners(popup.getElement()!, nearbyProps);
       }
 
       popup.on("close", () => {
@@ -809,45 +809,41 @@ function buildPinnedPopupHTML(props: Record<string, any>): string {
   `;
 }
 
-// Store multi-popup data on window so inline onclick handlers can access it
-declare global {
-  interface Window {
-    __cfcMultiPopup?: {
-      propsList: Record<string, any>[];
-      showDetail: (idx: number) => void;
-      showList: () => void;
-    };
-  }
-}
-
-function buildMultiPopupHTML(propsList: Record<string, any>[], popupEl?: HTMLElement): string {
-  const first = propsList[0];
-
-  // Register handlers on window for inline onclick access
-  if (typeof window !== "undefined") {
-    window.__cfcMultiPopup = {
-      propsList,
-      showDetail: (idx: number) => {
-        if (!popupEl) return;
+function attachMultiPopupListeners(popupEl: HTMLElement, propsList: Record<string, any>[]) {
+  function bindRows() {
+    popupEl.querySelectorAll<HTMLElement>("[data-project-idx]").forEach((row) => {
+      row.addEventListener("pointerup", (e) => {
+        e.stopPropagation();
+        const idx = Number(row.dataset.projectIdx);
         const p = propsList[idx];
         if (!p) return;
+        const content = popupEl.querySelector(".mapboxgl-popup-content");
+        if (!content) return;
         const backBar = `
-          <div onclick="window.__cfcMultiPopup.showList()" style="padding:8px 14px;background:#374859;color:white;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:Lato,sans-serif">
+          <div data-back-btn style="padding:8px 14px;background:#374859;color:white;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:Lato,sans-serif">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
             All ${propsList.length} Projects
           </div>`;
-        const content = popupEl.querySelector(".mapboxgl-popup-content");
-        if (content) content.innerHTML = backBar + buildPinnedPopupHTML(p);
-      },
-      showList: () => {
-        if (!popupEl) return;
-        const content = popupEl.querySelector(".mapboxgl-popup-content");
-        if (content) content.innerHTML = buildMultiPopupListHTML(propsList);
-      },
-    };
+        content.innerHTML = backBar + buildPinnedPopupHTML(p);
+        bindBack();
+      });
+    });
   }
 
-  return buildMultiPopupListHTML(propsList);
+  function bindBack() {
+    const backBtn = popupEl.querySelector<HTMLElement>("[data-back-btn]");
+    if (backBtn) {
+      backBtn.addEventListener("pointerup", (e) => {
+        e.stopPropagation();
+        const content = popupEl.querySelector(".mapboxgl-popup-content");
+        if (!content) return;
+        content.innerHTML = buildMultiPopupListHTML(propsList);
+        bindRows();
+      });
+    }
+  }
+
+  bindRows();
 }
 
 function buildMultiPopupListHTML(propsList: Record<string, any>[]): string {
@@ -858,7 +854,7 @@ function buildMultiPopupListHTML(propsList: Record<string, any>[]): string {
       const statusColor = isActive ? PIN_COLORS.active : PIN_COLORS.completed;
       const statusLabel = isActive ? "Active" : "Completed";
       return `
-      <div onclick="window.__cfcMultiPopup.showDetail(${i})" style="padding:10px 14px;border-bottom:1px solid #eee;cursor:pointer;transition:background 0.15s" onmouseenter="this.style.background='#f8f7f4'" onmouseleave="this.style.background='white'">
+      <div data-project-idx="${i}" style="padding:10px 14px;border-bottom:1px solid #eee;cursor:pointer;transition:background 0.15s" onmouseenter="this.style.background='#f8f7f4'" onmouseleave="this.style.background='white'">
         <div style="font-weight:700;font-size:13px;color:#374859">${p.partner}</div>
         ${p.details ? `<div style="font-size:11px;color:#666;margin-top:2px">${p.details}</div>` : ""}
         <div style="margin-top:4px;display:flex;align-items:center;gap:4px">
