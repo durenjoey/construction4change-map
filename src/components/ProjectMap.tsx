@@ -97,6 +97,7 @@ export function ProjectMap({ projects }: ProjectMapProps) {
             startYear: p.startYear || 0,
             endYear: p.endYear || 0,
             status: p.status || "completed",
+            imageUrl: p.imageUrl || "",
             color: p.status === "active" ? PIN_COLORS.active : PIN_COLORS.completed,
           },
         })),
@@ -769,17 +770,18 @@ function buildPinnedPopupHTML(props: Record<string, any>): string {
   const statusLabel = isActive ? "Active" : "Completed";
   const yr = formatYear(props);
   const location = [props.city, props.country].filter(Boolean).join(", ");
-  return `
-    <div style="width:320px;border-radius:10px;background:white;box-shadow:0 6px 24px rgba(0,0,0,0.18);overflow:hidden;border:1px solid #d6d6d6;font-family:Lato,sans-serif">
-      <div style="height:160px;background:linear-gradient(135deg,#e8e4df 0%,#d4d0cb 100%);display:flex;align-items:center;justify-content:center;position:relative">
-        <div style="text-align:center;color:#999;font-size:12px">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:4px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
-          <div>Photo coming soon</div>
-        </div>
+  const imageSection = props.imageUrl
+    ? `<div style="height:160px;position:relative">
+        <img src="${props.imageUrl}" alt="${props.partner}" style="width:100%;height:100%;object-fit:cover" />
         <div style="position:absolute;top:10px;right:10px">
           <span style="display:inline-block;font-size:10px;padding:3px 10px;border-radius:9999px;color:white;background:${statusColor};font-weight:600">${statusLabel}</span>
         </div>
-      </div>
+      </div>`
+    : "";
+
+  return `
+    <div style="width:320px;border-radius:10px;background:white;box-shadow:0 6px 24px rgba(0,0,0,0.18);overflow:hidden;border:1px solid #d6d6d6;font-family:Lato,sans-serif">
+      ${imageSection}
       <div style="padding:14px 16px">
         <div style="font-weight:700;font-size:16px;color:#374859;line-height:1.3">${props.partner}</div>
         ${props.details ? `<div style="font-size:13px;color:#666;margin-top:6px;line-height:1.4">${props.details}</div>` : ""}
