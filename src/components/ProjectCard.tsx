@@ -20,7 +20,15 @@ export function ProjectCard({ project, compact = false }: ProjectCardProps) {
   if (compact) {
     return (
       <div className="w-[280px] rounded-lg bg-white shadow-lg border border-cfc-gray-light overflow-hidden">
-        <div className="h-1.5" style={{ backgroundColor: typeColor }} />
+        {project.imageUrl ? (
+          <img
+            src={project.imageUrl}
+            alt={project.partner}
+            className="w-full h-[140px] object-cover"
+          />
+        ) : (
+          <div className="h-1.5" style={{ backgroundColor: typeColor }} />
+        )}
         <div className="p-4">
           <p className="font-bold text-sm text-cfc-slate leading-tight">
             {project.partner}
@@ -58,7 +66,15 @@ export function ProjectCard({ project, compact = false }: ProjectCardProps) {
 
   return (
     <div className="rounded-lg bg-white border border-cfc-gray-light overflow-hidden hover:shadow-md transition-shadow">
-      <div className="h-1" style={{ backgroundColor: typeColor }} />
+      {project.imageUrl ? (
+        <img
+          src={project.imageUrl}
+          alt={project.partner}
+          className="w-full h-[160px] object-cover"
+        />
+      ) : (
+        <div className="h-1" style={{ backgroundColor: typeColor }} />
+      )}
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">

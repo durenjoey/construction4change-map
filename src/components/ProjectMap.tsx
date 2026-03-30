@@ -306,10 +306,8 @@ export function ProjectMap({ projects }: ProjectMapProps) {
 
       if (popupRef.current) popupRef.current.remove();
 
-      const html =
-        nearby.length > 1
-          ? buildMultiPopupHTML(nearby.map((f) => f.properties!))
-          : buildPinnedPopupHTML(feat.properties!);
+      const isList = nearby.length > 1;
+      const nearbyProps = nearby.map((f) => f.properties!);
 
       const popup = new mapboxgl.Popup({
         closeOnClick: false,
@@ -318,8 +316,12 @@ export function ProjectMap({ projects }: ProjectMapProps) {
         offset: 20,
       })
         .setLngLat(coords)
-        .setHTML(html)
+        .setHTML(isList ? buildMultiPopupListHTML(nearbyProps) : buildPinnedPopupHTML(feat.properties!))
         .addTo(mapInstance);
+
+      if (isList) {
+        buildMultiPopupHTML(nearbyProps, popup.getElement());
+      }
 
       popupRef.current = popup;
     });
@@ -347,10 +349,8 @@ export function ProjectMap({ projects }: ProjectMapProps) {
 
       if (popupRef.current) popupRef.current.remove();
 
-      const html =
-        nearby.length > 1
-          ? buildMultiPopupHTML(nearby.map((f) => f.properties!))
-          : buildPinnedPopupHTML(feat.properties!);
+      const isList = nearby.length > 1;
+      const nearbyProps = nearby.map((f) => f.properties!);
 
       const popup = new mapboxgl.Popup({
         closeOnClick: false,
@@ -359,8 +359,12 @@ export function ProjectMap({ projects }: ProjectMapProps) {
         offset: 20,
       })
         .setLngLat(coords)
-        .setHTML(html)
+        .setHTML(isList ? buildMultiPopupListHTML(nearbyProps) : buildPinnedPopupHTML(feat.properties!))
         .addTo(mapInstance);
+
+      if (isList) {
+        buildMultiPopupHTML(nearbyProps, popup.getElement());
+      }
 
       popup.on("close", () => {
         pinnedRef.current = false;
@@ -805,20 +809,62 @@ function buildPinnedPopupHTML(props: Record<string, any>): string {
   `;
 }
 
-function buildMultiPopupHTML(propsList: Record<string, any>[]): string {
+// Store multi-popup data on window so inline onclick handlers can access it
+declare global {
+  interface Window {
+    __cfcMultiPopup?: {
+      propsList: Record<string, any>[];
+      showDetail: (idx: number) => void;
+      showList: () => void;
+    };
+  }
+}
+
+function buildMultiPopupHTML(propsList: Record<string, any>[], popupEl?: HTMLElement): string {
+  const first = propsList[0];
+
+  // Register handlers on window for inline onclick access
+  if (typeof window !== "undefined") {
+    window.__cfcMultiPopup = {
+      propsList,
+      showDetail: (idx: number) => {
+        if (!popupEl) return;
+        const p = propsList[idx];
+        if (!p) return;
+        const backBar = `
+          <div onclick="window.__cfcMultiPopup.showList()" style="padding:8px 14px;background:#374859;color:white;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:Lato,sans-serif">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+            All ${propsList.length} Projects
+          </div>`;
+        const content = popupEl.querySelector(".mapboxgl-popup-content");
+        if (content) content.innerHTML = backBar + buildPinnedPopupHTML(p);
+      },
+      showList: () => {
+        if (!popupEl) return;
+        const content = popupEl.querySelector(".mapboxgl-popup-content");
+        if (content) content.innerHTML = buildMultiPopupListHTML(propsList);
+      },
+    };
+  }
+
+  return buildMultiPopupListHTML(propsList);
+}
+
+function buildMultiPopupListHTML(propsList: Record<string, any>[]): string {
   const first = propsList[0];
   const items = propsList
-    .map((p) => {
+    .map((p, i) => {
       const isActive = p.status === "active";
       const statusColor = isActive ? PIN_COLORS.active : PIN_COLORS.completed;
       const statusLabel = isActive ? "Active" : "Completed";
       return `
-      <div style="padding:10px 14px;border-bottom:1px solid #eee">
+      <div onclick="window.__cfcMultiPopup.showDetail(${i})" style="padding:10px 14px;border-bottom:1px solid #eee;cursor:pointer;transition:background 0.15s" onmouseenter="this.style.background='#f8f7f4'" onmouseleave="this.style.background='white'">
         <div style="font-weight:700;font-size:13px;color:#374859">${p.partner}</div>
         ${p.details ? `<div style="font-size:11px;color:#666;margin-top:2px">${p.details}</div>` : ""}
-        <div style="margin-top:4px;display:flex;gap:4px">
+        <div style="margin-top:4px;display:flex;align-items:center;gap:4px">
           <span style="display:inline-block;font-size:9px;padding:1px 8px;border-radius:9999px;color:white;background:${statusColor}">${statusLabel}</span>
           ${p.type ? `<span style="display:inline-block;font-size:9px;padding:1px 8px;border-radius:9999px;color:#374859;background:#faf9f5;border:1px solid #d6d6d6">${p.type}</span>` : ""}
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;flex-shrink:0"><path d="m9 18 6-6-6-6"/></svg>
         </div>
       </div>`;
     })
