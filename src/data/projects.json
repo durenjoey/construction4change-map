@@ -352,7 +352,7 @@
   },
   {
     "id": "28",
-    "partner": "Women's Protection Center Nepal",
+    "partner": "Women\"s Protection Center Nepal",
     "country": "Nepal",
     "city": "Hetauda",
     "lat": 27.429071,
@@ -881,32 +881,6 @@
     "details": "School Kitchen design",
     "startYear": 2019,
     "endYear": 2020,
-    "status": "completed"
-  },
-  {
-    "id": "-",
-    "partner": "West African Vocational Schools (Phase 1)",
-    "country": "Guinea Bisseau",
-    "city": "Antula - Bissau",
-    "lat": 11.8946971,
-    "lng": -15.5972816,
-    "type": "Economic",
-    "details": "Vocational Training Campus",
-    "startYear": 2019,
-    "endYear": 2020,
-    "status": "completed"
-  },
-  {
-    "id": "69-72",
-    "partner": "Integrate Health (Phase 4) - Combined",
-    "country": null,
-    "city": null,
-    "lat": null,
-    "lng": null,
-    "type": "Healthcare",
-    "details": "Health Clinic Renovations",
-    "startYear": 2020,
-    "endYear": 2021,
     "status": "completed"
   },
   {
@@ -1632,7 +1606,7 @@
     "lat": 47.9793437,
     "lng": -122.2127011,
     "type": "Housing",
-    "details": "25 Pallet Unit Deployment for single mother's shelter",
+    "details": "25 Pallet Unit Deployment for single mother\"s shelter",
     "startYear": 2025,
     "endYear": 2025,
     "status": "completed"
@@ -1775,7 +1749,7 @@
     "lat": 0.2254509,
     "lng": 37.7772624,
     "type": "WASH",
-    "details": "Construction of Kitchen at Macecall Home for World's Children",
+    "details": "Construction of Kitchen at Macecall Home for World\"s Children",
     "startYear": 2026,
     "endYear": null,
     "status": "active"
