@@ -274,7 +274,7 @@
   },
   {
     "id": "22",
-    "partner": "Partners in Health: Neno, Malawi",
+    "partner": "Partners in Health",
     "country": "Malawi",
     "city": "Neno",
     "lat": -15.3951305,
@@ -364,21 +364,8 @@
     "status": "completed"
   },
   {
-    "id": "-",
-    "partner": "23rd & Cherry: Seattle",
-    "country": "USA",
-    "city": null,
-    "lat": null,
-    "lng": null,
-    "type": "Economic",
-    "details": "Addiction Support Center",
-    "startYear": 2016,
-    "endYear": null,
-    "status": "active"
-  },
-  {
     "id": "29",
-    "partner": "Larkin Street Youth Services (Phase 1)",
+    "partner": "Larkin Street Youth Services (Building 1)",
     "country": "USA",
     "city": "San Francisco",
     "lat": 37.773972,
@@ -391,7 +378,7 @@
   },
   {
     "id": "30",
-    "partner": "Larkin Street Youth Services (Phase 2)",
+    "partner": "Larkin Street Youth Services (Building 2)",
     "country": "USA",
     "city": "San Francisco",
     "lat": 37.773972,
@@ -417,7 +404,7 @@
   },
   {
     "id": "32",
-    "partner": "World Relief Seattle: Kent, WA",
+    "partner": "World Relief Refugee Garden",
     "country": "USA",
     "city": "Kent",
     "lat": 47.37801,
@@ -430,7 +417,7 @@
   },
   {
     "id": "33",
-    "partner": "Etta Projects",
+    "partner": "Etta Community Center",
     "country": "Bolivia",
     "city": "Buena Vista",
     "lat": -17.413977,
@@ -443,7 +430,7 @@
   },
   {
     "id": "34",
-    "partner": "Matibabu & Tiba Foundation (Phase 1)",
+    "partner": "Matibabu Hospital",
     "country": "Kenya",
     "city": "Ugenya",
     "lat": 0.283333,
@@ -456,7 +443,7 @@
   },
   {
     "id": "35",
-    "partner": "I Love Baseball/COTN Design & Planning",
+    "partner": "I Love Baseball/COTN Baseball Stadium",
     "country": "Dominican Republic",
     "city": "Barahona",
     "lat": 18.15629,
@@ -469,7 +456,7 @@
   },
   {
     "id": "36",
-    "partner": "IDH Bolivia",
+    "partner": "IDH Health Clinic",
     "country": "Bolivia",
     "city": "Cochambaba",
     "lat": -17.3855905,
@@ -482,7 +469,7 @@
   },
   {
     "id": "37",
-    "partner": "BABES",
+    "partner": "YWCA Office Building",
     "country": "USA",
     "city": "Seattle",
     "lat": 47.6079176,
@@ -521,7 +508,7 @@
   },
   {
     "id": "40",
-    "partner": "Dandelion Africa",
+    "partner": "Dandelion Africa Maternity Ward",
     "country": "Kenya",
     "city": "Nakuru",
     "lat": -0.303099,
@@ -540,7 +527,7 @@
     "lat": -1.3111773,
     "lng": 36.7869633,
     "type": "Education",
-    "details": "Girls Dormatory & Multi-use facility",
+    "details": "Girls Dormitory & Multi-use facility",
     "startYear": 2018,
     "endYear": 2021,
     "status": "completed"
