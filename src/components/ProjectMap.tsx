@@ -456,6 +456,20 @@ export function ProjectMap({ projects }: ProjectMapProps) {
       setupCountryHighlights(mapInstance);
       setupLayers(mapInstance);
       setupInteractions(mapInstance);
+
+      // Fit map to project bounds
+      if (filteredProjects.length > 0) {
+        const bounds = new mapboxgl.LngLatBounds();
+        filteredProjects.forEach((p) => {
+          if (p.lat && p.lng) bounds.extend([p.lng, p.lat]);
+        });
+        mapInstance.fitBounds(bounds, {
+          padding: { top: 60, bottom: 20, left: 20, right: 20 },
+          maxZoom: 8,
+          duration: 0,
+        });
+      }
+
       setMapReady(true);
     });
 
