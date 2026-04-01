@@ -34,7 +34,7 @@ const CFC_COUNTRY_CODES = [
 ];
 
 const PIN_COLORS = {
-  active: "#cb463a",
+  active: "#901a1d",
   completed: "#374859",
 };
 
@@ -53,6 +53,7 @@ export function ProjectMap({ projects }: ProjectMapProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "completed">("all");
   const [legendOpen, setLegendOpen] = useState(false);
+  const [mapInteracted, setMapInteracted] = useState(false);
 
   const mappableProjects = projects.filter((p) => p.lat && p.lng);
 
@@ -454,6 +455,13 @@ export function ProjectMap({ projects }: ProjectMapProps) {
     );
 
     mapInstance.on("load", () => {
+      // Defer interaction listeners so initial fitBounds doesn't trigger them
+      setTimeout(() => {
+        const hideTitle = () => setMapInteracted(true);
+        mapInstance.on("dragstart", hideTitle);
+        mapInstance.on("zoomstart", hideTitle);
+        mapInstance.on("pitchstart", hideTitle);
+      }, 500);
       // Register pin icons
       const activePin = createPinImage(PIN_COLORS.active, 24);
       const completedPin = createPinImage(PIN_COLORS.completed, 24);
@@ -523,6 +531,29 @@ export function ProjectMap({ projects }: ProjectMapProps) {
             bottom: 0,
           }}
         />
+
+        {/* Map title — fades on interaction */}
+        <h1
+          style={{
+            position: "absolute",
+            top: "30%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            zIndex: 4,
+            fontSize: "clamp(2rem, 5vw, 4rem)",
+            fontWeight: 800,
+            letterSpacing: "0.15em",
+            color: "#374859",
+            textTransform: "uppercase",
+            opacity: mapInteracted ? 0 : 1,
+            transition: "opacity 0.6s ease",
+            pointerEvents: "none",
+            userSelect: "none",
+            margin: 0,
+          }}
+        >
+          Projects
+        </h1>
 
         {/* Top-left: Stats + Search */}
         <div

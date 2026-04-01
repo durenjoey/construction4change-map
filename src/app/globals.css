@@ -197,9 +197,9 @@
   margin-bottom: 24px !important;
 }
 
-/* Zoom controls — CFC brick red */
+/* Zoom controls — CFC maroon */
 .mapboxgl-ctrl-group {
-  background: var(--color-cfc-red) !important;
+  background: var(--color-cfc-maroon) !important;
   border: none !important;
   border-radius: 8px !important;
   overflow: hidden;
@@ -222,7 +222,7 @@
 }
 
 .mapboxgl-ctrl-group button:hover {
-  background: var(--color-cfc-maroon) !important;
+  background: #6e1315 !important;
 }
 
 /* Stats bar mobile */
