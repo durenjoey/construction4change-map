@@ -68,9 +68,17 @@ export function ProjectMap({ projects }: ProjectMapProps) {
   });
 
   const totalProjects = mappableProjects.length;
-  const activeCount = mappableProjects.filter((p) => p.status === "active").length;
-  const completedCount = mappableProjects.filter((p) => p.status === "completed").length;
-  const countries = new Set(projects.map((p) => p.country).filter(Boolean)).size;
+  // STATS HARDCODED per Mike McEvoy (CfC ED) on 2026-03-30.
+  // Actual data is 125 completed / 12 active after removing duplicate Project 24
+  // and marking iKure as completed. Mike asked to keep 126/13 since it's published
+  // everywhere on the CfC website. When the next project completes and the real
+  // count catches up to 126, switch these back to dynamic:
+  //   const completedCount = mappableProjects.filter((p) => p.status === "completed").length;
+  //   const activeCount = mappableProjects.filter((p) => p.status === "active").length;
+  //   const countries = new Set(projects.map((p) => p.country).filter(Boolean)).size;
+  const completedCount = 126;
+  const activeCount = 13;
+  const countries = 23;
   const years = projects.filter((p) => p.startYear).map((p) => p.startYear!);
   const yearRange = years.length
     ? `${Math.min(...years)}\u2013Present`
@@ -549,7 +557,7 @@ export function ProjectMap({ projects }: ProjectMapProps) {
                 {completedCount}
               </span>
               <span style={{ fontSize: "11px", color: "#999", marginLeft: "4px" }}>
-                Closed
+                Completed
               </span>
             </div>
             <div

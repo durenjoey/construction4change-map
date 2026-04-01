@@ -299,19 +299,6 @@
     "status": "completed"
   },
   {
-    "id": "24",
-    "partner": "Integrate Health (Phase 1) - Adabewere",
-    "country": "Togo",
-    "city": "Adabewere",
-    "lat": 9.55111,
-    "lng": 1.18611,
-    "type": "Healthcare",
-    "details": "Health Clinic & Maternity Ward",
-    "startYear": 2016,
-    "endYear": 2017,
-    "status": "completed"
-  },
-  {
     "id": "25",
     "partner": "Integrate Health (Phase 2)  - Djamde",
     "country": "Togo",
@@ -854,7 +841,7 @@
     "type": "Healthcare",
     "details": "Advanced Health Care Center",
     "startYear": 2019,
-    "endYear": null,
+    "endYear": 2021,
     "status": "completed"
   },
   {
@@ -1587,7 +1574,7 @@
   },
   {
     "id": "123",
-    "partner": "Duoako Health Centre",
+    "partner": "Douako Health Centre",
     "country": "Guinea",
     "city": "Duoako",
     "lat": 9.737675,
@@ -1719,9 +1706,9 @@
     "id": "A7",
     "partner": "JohnPaul Secondary School",
     "country": "Uganda",
-    "city": null,
-    "lat": 1.5333554,
-    "lng": 32.2166578,
+    "city": "Chelekura, Pallisa District",
+    "lat": 1.3,
+    "lng": 33.6667,
     "type": "Education",
     "details": "John Paul Secondary School Boundary wall & Master plan",
     "startYear": 2026,
@@ -1784,11 +1771,11 @@
     "id": "A12",
     "partner": "Kilulu Primary School",
     "country": "Kenya",
-    "city": "Bungoma",
-    "lat": 0.7829245,
-    "lng": 34.7191681,
+    "city": "Lugari, Kakamega County",
+    "lat": 0.65,
+    "lng": 34.85,
     "type": "Education",
-    "details": null,
+    "details": "Construction of a 9-classroom block, latrine blocks, 16-door student & 2-door staff ablution blocks and renovation of staffroom block",
     "startYear": 2026,
     "endYear": null,
     "status": "active"
@@ -1801,7 +1788,20 @@
     "lat": -2.257093,
     "lng": 37.8771715,
     "type": "Healthcare",
-    "details": null,
+    "details": "Construction of a new maternity block with antenatal and postnatal wards, NBU ward, theatre and recovery room",
+    "startYear": 2026,
+    "endYear": null,
+    "status": "active"
+  },
+  {
+    "id": "A14",
+    "partner": "Flying Kites Partner Schools Network",
+    "country": "Kenya",
+    "city": "Njabini",
+    "lat": -0.7276,
+    "lng": 36.6539,
+    "type": "WASH",
+    "details": "Construction of Mutonyora, Githinji, and Baraka Schools Washrooms",
     "startYear": 2026,
     "endYear": null,
     "status": "active"
