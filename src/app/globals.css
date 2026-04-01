@@ -191,6 +191,40 @@
   display: none !important;
 }
 
+/* Zoom control position — extra margin from edges */
+.mapboxgl-ctrl-bottom-right .mapboxgl-ctrl-group {
+  margin-right: 20px !important;
+  margin-bottom: 24px !important;
+}
+
+/* Zoom controls — CFC brick red */
+.mapboxgl-ctrl-group {
+  background: var(--color-cfc-red) !important;
+  border: none !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+}
+
+.mapboxgl-ctrl-group button {
+  background: transparent !important;
+  border: none !important;
+  width: 36px !important;
+  height: 36px !important;
+}
+
+.mapboxgl-ctrl-group button + button {
+  border-top: 1px solid rgba(255, 255, 255, 0.25) !important;
+}
+
+.mapboxgl-ctrl-group button .mapboxgl-ctrl-icon {
+  filter: brightness(0) invert(1) !important;
+}
+
+.mapboxgl-ctrl-group button:hover {
+  background: var(--color-cfc-maroon) !important;
+}
+
 /* Stats bar mobile */
 @media (max-width: 520px) {
   .stats-bar {
