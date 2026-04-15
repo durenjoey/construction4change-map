@@ -4,7 +4,7 @@ import { Resend } from "resend";
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Configure the recipient email address here
-const RECIPIENT_EMAIL = process.env.CONTACT_FORM_RECIPIENT || "hello@constructionforchange.org";
+const RECIPIENT_EMAIL = process.env.CONTACT_FORM_RECIPIENT || "info@constructionforchange.org";
 
 export async function POST(request: NextRequest) {
   try {
