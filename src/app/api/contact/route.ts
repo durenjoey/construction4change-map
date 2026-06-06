@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
+import { escapeHtml, getClientIp, rateLimit } from "@/lib/security";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -8,7 +9,23 @@ const RECIPIENT_EMAIL = process.env.CONTACT_FORM_RECIPIENT || "info@construction
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, organization, message } = await request.json();
+    // Per-IP rate limit: blunt spam/abuse and protect the Resend quota.
+    const ip = getClientIp(request);
+    if (!rateLimit(`contact:${ip}`, 5, 60_000)) {
+      return NextResponse.json(
+        { error: "Too many requests. Please wait a moment and try again." },
+        { status: 429 }
+      );
+    }
+
+    const { name, email, organization, message, company_website } =
+      await request.json();
+
+    // Honeypot: real users never see/fill `company_website`. If it has a
+    // value, silently accept (generic success) without sending anything.
+    if (typeof company_website === "string" && company_website.trim() !== "") {
+      return NextResponse.json({ success: true });
+    }
 
     // Basic validation
     if (!name || !email || !message) {
@@ -91,13 +108,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
 }

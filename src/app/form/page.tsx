@@ -21,6 +21,8 @@ export default function ContactFormPage() {
     description: "",
     additional: "",
   });
+  // Honeypot: hidden from real users; bots that fill it get silently dropped.
+  const [companyWebsite, setCompanyWebsite] = useState("");
   const [status, setStatus] = useState<
     "idle" | "sending" | "success" | "error"
   >("idle");
@@ -39,6 +41,7 @@ export default function ContactFormPage() {
           name: formData.name,
           email: formData.email,
           organization: formData.organization,
+          company_website: companyWebsite,
           message: [
             `Project Location: ${formData.projectLocation}`,
             `Type of Project: ${formData.projectType}`,
@@ -65,6 +68,7 @@ export default function ContactFormPage() {
         description: "",
         additional: "",
       });
+      setCompanyWebsite("");
     } catch (err) {
       setStatus("error");
       setErrorMessage(
@@ -250,6 +254,28 @@ export default function ContactFormPage() {
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
+              {/* Honeypot field: hidden from humans, catches bots. Do not remove. */}
+              <div
+                aria-hidden="true"
+                style={{
+                  position: "absolute",
+                  left: "-9999px",
+                  width: "1px",
+                  height: "1px",
+                  overflow: "hidden",
+                }}
+              >
+                <label htmlFor="company_website">Company Website</label>
+                <input
+                  id="company_website"
+                  name="company_website"
+                  type="text"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={companyWebsite}
+                  onChange={(e) => setCompanyWebsite(e.target.value)}
+                />
+              </div>
               <div
                 style={{
                   background: "#ffffff",
