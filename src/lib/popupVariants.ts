@@ -71,8 +71,8 @@ export function buildCardImageRight(props: Props): string {
   const location = [props.city, props.country].filter(Boolean).join(", ");
   const img = safeImageSrc(props.imageUrl);
   const imageCol = img
-    ? `<div style="width:118px;flex-shrink:0;position:relative">
-        <img src="${escapeHtml(img)}" alt="${escapeHtml(props.partner)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" />
+    ? `<div style="width:162px;flex-shrink:0;position:relative">
+        <img src="${escapeHtml(img)}" alt="${escapeHtml(props.partner)}" style="width:100%;height:100%;object-fit:cover;object-position:center;position:absolute;inset:0" />
       </div>`
     : `<div style="width:6px;flex-shrink:0;background:${color}"></div>`;
   return `
@@ -97,8 +97,8 @@ export function buildCardInset(props: Props): string {
   const location = [props.city, props.country].filter(Boolean).join(", ");
   const img = safeImageSrc(props.imageUrl);
   const inset = img
-    ? `<img src="${escapeHtml(img)}" alt="${escapeHtml(props.partner)}" style="width:112px;height:112px;border-radius:8px;object-fit:cover;flex-shrink:0" />`
-    : `<div style="width:112px;height:112px;border-radius:8px;flex-shrink:0;background:${color};opacity:0.12"></div>`;
+    ? `<img src="${escapeHtml(img)}" alt="${escapeHtml(props.partner)}" style="width:140px;height:140px;border-radius:8px;object-fit:cover;flex-shrink:0" />`
+    : `<div style="width:140px;height:140px;border-radius:8px;flex-shrink:0;background:${color};opacity:0.12"></div>`;
   return `
     <div style="width:360px;${SHELL}">
       <div style="padding:16px">

@@ -12,8 +12,8 @@ export default function CardsIndex() {
   const options = [
     { href: "/cards/top", title: "A — Image on top", note: "Photo banner, 3 stat tiles", html: buildCardImageTop(p) },
     { href: "/cards/right", title: "B — Image on the right", note: "Text + stacked items, photo on the edge", html: buildCardImageRight(p) },
-    { href: "/cards/inset", title: "D — Embedded in the side", note: "Photo contained beside the items", html: buildCardInset(p) },
     { href: "/cards/hero", title: "C — Hero overlay", note: "Photo-forward, text over image", html: buildCardHero(p) },
+    { href: "/cards/inset", title: "D — Embedded in the side", note: "Photo contained beside the items", html: buildCardInset(p) },
   ];
 
   return (
