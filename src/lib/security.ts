@@ -34,6 +34,21 @@ export function safeHttpsUrl(value: unknown): string | null {
   }
 }
 
+/**
+ * Return a safe <img src> value: either an absolute https: URL, or a
+ * same-origin relative path under /projects/ with an image extension.
+ * Everything else (javascript:, data:, http:, traversal) returns null.
+ * Used for the map popup img built via innerHTML.
+ */
+export function safeImageSrc(value: unknown): string | null {
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+  if (/^\/projects\/[A-Za-z0-9._-]+\.(jpg|jpeg|png|webp)$/i.test(raw)) {
+    return raw;
+  }
+  return safeHttpsUrl(raw);
+}
+
 /** Pull the best-guess client IP from proxy headers (Vercel sets x-forwarded-for). */
 export function getClientIp(request: Request): string {
   const fwd = request.headers.get("x-forwarded-for");

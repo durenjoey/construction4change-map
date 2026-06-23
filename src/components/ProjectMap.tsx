@@ -4,7 +4,11 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { Project } from "@/lib/types";
-import { escapeHtml, safeHttpsUrl } from "@/lib/security";
+import {
+  PIN_COLORS,
+  buildPinnedPopupHTML,
+  buildMultiPopupListHTML,
+} from "@/lib/popupHtml";
 
 // ISO 3166-1 alpha-3 codes for countries CfC has worked in
 const CFC_COUNTRY_CODES = [
@@ -33,11 +37,6 @@ const CFC_COUNTRY_CODES = [
   "HND", // Honduras (active precon)
   "SSD", // South Sudan (active precon)
 ];
-
-const PIN_COLORS = {
-  active: "#901a1d",
-  completed: "#374859",
-};
 
 const COUNTRY_HIGHLIGHT = "#d4e8d0";
 
@@ -823,65 +822,6 @@ export function ProjectMap({ projects }: ProjectMapProps) {
   );
 }
 
-function formatYear(props: Record<string, any>): string {
-  return props.startYear && props.startYear > 0
-    ? props.endYear && props.endYear > 0
-      ? props.startYear === props.endYear
-        ? `${props.startYear}`
-        : `${props.startYear}\u2013${props.endYear}`
-      : `${props.startYear}\u2013Present`
-    : "";
-}
-
-/** Full detail popup — photo placeholder, stats, type */
-function buildPinnedPopupHTML(props: Record<string, any>): string {
-  const isActive = props.status === "active";
-  const statusColor = isActive ? PIN_COLORS.active : PIN_COLORS.completed;
-  const statusLabel = isActive ? "Active" : "Completed";
-  const yr = formatYear(props);
-  const location = [props.city, props.country].filter(Boolean).join(", ");
-  const safeImageUrl = safeHttpsUrl(props.imageUrl);
-  const imageSection = safeImageUrl
-    ? `<div style="height:160px;position:relative">
-        <img src="${escapeHtml(safeImageUrl)}" alt="${escapeHtml(props.partner)}" style="width:100%;height:100%;object-fit:cover" />
-        <div style="position:absolute;top:10px;right:10px">
-          <span style="display:inline-block;font-size:10px;padding:3px 10px;border-radius:9999px;color:white;background:${statusColor};font-weight:600">${statusLabel}</span>
-        </div>
-      </div>`
-    : "";
-
-  return `
-    <div style="width:320px;border-radius:10px;background:white;box-shadow:0 6px 24px rgba(0,0,0,0.18);overflow:hidden;border:1px solid #d6d6d6;font-family:Lato,sans-serif">
-      ${imageSection}
-      <div style="padding:14px 16px">
-        <div style="font-weight:700;font-size:16px;color:#374859;line-height:1.3">${escapeHtml(props.partner)}</div>
-        ${props.details ? `<div style="font-size:13px;color:#666;margin-top:6px;line-height:1.4">${escapeHtml(props.details)}</div>` : ""}
-        <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          ${location ? `
-          <div style="background:#f8f7f4;border-radius:6px;padding:8px 10px">
-            <div style="font-size:10px;color:#999;text-transform:uppercase;letter-spacing:0.5px">Location</div>
-            <div style="font-size:13px;color:#374859;font-weight:600;margin-top:2px">${escapeHtml(location)}</div>
-          </div>` : ""}
-          ${yr ? `
-          <div style="background:#f8f7f4;border-radius:6px;padding:8px 10px">
-            <div style="font-size:10px;color:#999;text-transform:uppercase;letter-spacing:0.5px">Year</div>
-            <div style="font-size:13px;color:#374859;font-weight:600;margin-top:2px">${yr}</div>
-          </div>` : ""}
-          ${props.type ? `
-          <div style="background:#f8f7f4;border-radius:6px;padding:8px 10px">
-            <div style="font-size:10px;color:#999;text-transform:uppercase;letter-spacing:0.5px">Sector</div>
-            <div style="font-size:13px;color:#374859;font-weight:600;margin-top:2px">${escapeHtml(props.type)}</div>
-          </div>` : ""}
-          <div style="background:#f8f7f4;border-radius:6px;padding:8px 10px">
-            <div style="font-size:10px;color:#999;text-transform:uppercase;letter-spacing:0.5px">Status</div>
-            <div style="font-size:13px;font-weight:600;margin-top:2px;color:${statusColor}">${statusLabel}</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
 function attachMultiPopupListeners(popupEl: HTMLElement, propsList: Record<string, any>[]) {
   function bindRows() {
     popupEl.querySelectorAll<HTMLElement>("[data-project-idx]").forEach((row) => {
@@ -919,32 +859,3 @@ function attachMultiPopupListeners(popupEl: HTMLElement, propsList: Record<strin
   bindRows();
 }
 
-function buildMultiPopupListHTML(propsList: Record<string, any>[]): string {
-  const first = propsList[0];
-  const items = propsList
-    .map((p, i) => {
-      const isActive = p.status === "active";
-      const statusColor = isActive ? PIN_COLORS.active : PIN_COLORS.completed;
-      const statusLabel = isActive ? "Active" : "Completed";
-      return `
-      <div data-project-idx="${i}" style="padding:10px 14px;border-bottom:1px solid #eee;cursor:pointer;transition:background 0.15s" onmouseenter="this.style.background='#f8f7f4'" onmouseleave="this.style.background='white'">
-        <div style="font-weight:700;font-size:13px;color:#374859">${escapeHtml(p.partner)}</div>
-        ${p.details ? `<div style="font-size:11px;color:#666;margin-top:2px">${escapeHtml(p.details)}</div>` : ""}
-        <div style="margin-top:4px;display:flex;align-items:center;gap:4px">
-          <span style="display:inline-block;font-size:9px;padding:1px 8px;border-radius:9999px;color:white;background:${statusColor}">${statusLabel}</span>
-          ${p.type ? `<span style="display:inline-block;font-size:9px;padding:1px 8px;border-radius:9999px;color:#374859;background:#faf9f5;border:1px solid #d6d6d6">${escapeHtml(p.type)}</span>` : ""}
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;flex-shrink:0"><path d="m9 18 6-6-6-6"/></svg>
-        </div>
-      </div>`;
-    })
-    .join("");
-
-  return `
-    <div style="width:270px;max-height:350px;overflow-y:auto;border-radius:8px;background:white;box-shadow:0 4px 20px rgba(0,0,0,0.15);border:1px solid #d6d6d6;font-family:Lato,sans-serif">
-      <div style="padding:10px 14px;background:#374859;color:white;font-weight:700;font-size:13px;position:sticky;top:0;z-index:1">
-        ${propsList.length} Projects \u2014 ${escapeHtml(first.city || first.country || "")}
-      </div>
-      ${items}
-    </div>
-  `;
-}
