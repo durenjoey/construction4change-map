@@ -23,7 +23,7 @@ export function formatYear(props: Record<string, any>): string {
     : "";
 }
 
-/** Full detail popup — photo, stats, type */
+/** Full detail popup (Card A, chosen by CfC) — photo on top, name, description, 3 tiles (Location/Year/Status); sector intentionally omitted. */
 export function buildPinnedPopupHTML(props: Record<string, any>): string {
   const isActive = props.status === "active";
   const statusColor = isActive ? PIN_COLORS.active : PIN_COLORS.completed;
@@ -38,7 +38,7 @@ export function buildPinnedPopupHTML(props: Record<string, any>): string {
           <span style="display:inline-block;font-size:10px;padding:3px 10px;border-radius:9999px;color:white;background:${statusColor};font-weight:600">${statusLabel}</span>
         </div>
       </div>`
-    : "";
+    : `<div style="height:5px;background:${statusColor}"></div>`;
 
   return `
     <div style="width:320px;border-radius:10px;background:white;box-shadow:0 6px 24px rgba(0,0,0,0.18);overflow:hidden;border:1px solid #d6d6d6;font-family:Lato,sans-serif">
@@ -46,7 +46,7 @@ export function buildPinnedPopupHTML(props: Record<string, any>): string {
       <div style="padding:14px 16px">
         <div style="font-weight:700;font-size:16px;color:#374859;line-height:1.3">${escapeHtml(props.partner)}</div>
         ${props.details ? `<div style="font-size:13px;color:#666;margin-top:6px;line-height:1.4">${escapeHtml(props.details)}</div>` : ""}
-        <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
           ${location ? `
           <div style="background:#f8f7f4;border-radius:6px;padding:8px 10px">
             <div style="font-size:10px;color:#999;text-transform:uppercase;letter-spacing:0.5px">Location</div>
@@ -56,11 +56,6 @@ export function buildPinnedPopupHTML(props: Record<string, any>): string {
           <div style="background:#f8f7f4;border-radius:6px;padding:8px 10px">
             <div style="font-size:10px;color:#999;text-transform:uppercase;letter-spacing:0.5px">Year</div>
             <div style="font-size:13px;color:#374859;font-weight:600;margin-top:2px">${yr}</div>
-          </div>` : ""}
-          ${props.type ? `
-          <div style="background:#f8f7f4;border-radius:6px;padding:8px 10px">
-            <div style="font-size:10px;color:#999;text-transform:uppercase;letter-spacing:0.5px">Sector</div>
-            <div style="font-size:13px;color:#374859;font-weight:600;margin-top:2px">${escapeHtml(props.type)}</div>
           </div>` : ""}
           <div style="background:#f8f7f4;border-radius:6px;padding:8px 10px">
             <div style="font-size:10px;color:#999;text-transform:uppercase;letter-spacing:0.5px">Status</div>
@@ -92,7 +87,6 @@ export function buildMultiPopupListHTML(propsList: Record<string, any>[]): strin
           ${p.details ? `<div style="font-size:11px;color:#666;margin-top:2px">${escapeHtml(p.details)}</div>` : ""}
           <div style="margin-top:4px;display:flex;align-items:center;gap:4px">
             <span style="display:inline-block;font-size:9px;padding:1px 8px;border-radius:9999px;color:white;background:${statusColor}">${statusLabel}</span>
-            ${p.type ? `<span style="display:inline-block;font-size:9px;padding:1px 8px;border-radius:9999px;color:#374859;background:#faf9f5;border:1px solid #d6d6d6">${escapeHtml(p.type)}</span>` : ""}
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;flex-shrink:0"><path d="m9 18 6-6-6-6"/></svg>
           </div>
         </div>
