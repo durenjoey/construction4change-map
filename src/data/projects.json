@@ -627,7 +627,7 @@
     "id": "50",
     "partner": "Bendjeli Health Clinic and Hospital",
     "country": "Togo",
-    "city": "Bandj\u00e9li",
+    "city": "Bandjéli",
     "lat": 9.4216709,
     "lng": 0.6184101,
     "type": "Healthcare",
@@ -885,7 +885,7 @@
   },
   {
     "id": "70",
-    "partner": "Integrate Health (Phase 4) - Solidarit\u00e9",
+    "partner": "Integrate Health (Phase 4) - Solidarité",
     "country": "Togo",
     "city": "Guerin-Kouka",
     "lat": 9.7257,
@@ -898,7 +898,7 @@
   },
   {
     "id": "71",
-    "partner": "Integrate Health (Phase 4) - Kouti\u00e8re",
+    "partner": "Integrate Health (Phase 4) - Koutière",
     "country": "Togo",
     "city": "Natchibore",
     "lat": 9.81587,
@@ -1622,6 +1622,19 @@
     "details": "14 Pallet Unit Deployment for Veterans experiencing homelessness",
     "startYear": 2025,
     "endYear": 2025,
+    "status": "completed"
+  },
+  {
+    "id": "127",
+    "partner": "Interbay Housing Development",
+    "country": "USA",
+    "city": "Seattle, WA",
+    "lat": 47.6415,
+    "lng": -122.3768,
+    "type": "Housing",
+    "details": "50 Pallet Units",
+    "startYear": 2025,
+    "endYear": 2026,
     "status": "completed"
   },
   {

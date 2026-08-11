@@ -17,8 +17,9 @@ import { Project } from "@/lib/types";
  */
 const IMAGE_EXTS = ["jpg", "jpeg", "png", "webp"];
 
-// <id>.<ext> (cover, ordinal 1) or <id>-<n>.<ext> (ordinal n). Ids are numeric.
-const IMAGE_FILE = /^(\d+)(?:-(\d+))?\.(jpg|jpeg|png|webp)$/i;
+// <id>.<ext> (cover, ordinal 1) or <id>-<n>.<ext> (ordinal n).
+// Ids are numeric ("121") or letter-prefixed for active projects ("A3").
+const IMAGE_FILE = /^([A-Za-z]*\d+)(?:-(\d+))?\.(jpg|jpeg|png|webp)$/i;
 
 function buildIdToImagesMap(): Record<string, string[]> {
   const dir = path.join(process.cwd(), "public", "projects");
