@@ -11,6 +11,7 @@ export interface Project {
   endYear: number | null;
   status: "completed" | "active";
   imageUrl?: string | null;
+  imageUrls?: string[];
 }
 
 export const PROJECT_TYPES = [

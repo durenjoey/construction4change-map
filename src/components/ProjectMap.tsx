@@ -107,6 +107,8 @@ export function ProjectMap({ projects }: ProjectMapProps) {
             endYear: p.endYear || 0,
             status: p.status || "completed",
             imageUrl: p.imageUrl || "",
+            // Mapbox stringifies array properties, so join here and split in the popup builder.
+            imageUrls: (p.imageUrls || []).join("|"),
             color: p.status === "active" ? PIN_COLORS.active : PIN_COLORS.completed,
           },
         })),
@@ -832,12 +834,7 @@ function attachMultiPopupListeners(popupEl: HTMLElement, propsList: Record<strin
         if (!p) return;
         const content = popupEl.querySelector(".mapboxgl-popup-content");
         if (!content) return;
-        const backBar = `
-          <div data-back-btn style="padding:8px 14px;background:#374859;color:white;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:Lato,sans-serif">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
-            All ${propsList.length} Projects
-          </div>`;
-        content.innerHTML = backBar + buildPinnedPopupHTML(p);
+        content.innerHTML = buildPinnedPopupHTML(p, { backButton: true });
         bindBack();
       });
     });
