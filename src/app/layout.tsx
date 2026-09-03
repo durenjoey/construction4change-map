@@ -15,13 +15,13 @@ const oswald = Oswald({
 });
 
 export const metadata: Metadata = {
-  title: "Construction for Change — Project Map",
+  title: "Construction for Change",
   description:
-    "Interactive map of 138 projects across 24 countries. Construction for Change provides construction management for NGOs building schools, clinics, and community infrastructure worldwide.",
+    "Delivering high-quality, sustainable social infrastructure that strengthens communities.",
   openGraph: {
-    title: "Construction for Change — Project Map",
+    title: "Construction for Change",
     description:
-      "Interactive map of 138 projects across 24 countries building schools, clinics, and community infrastructure.",
+      "Delivering high-quality, sustainable social infrastructure that strengthens communities.",
     type: "website",
   },
 };
