@@ -40,6 +40,7 @@ const CFC_COUNTRY_CODES = [
 
 const COUNTRY_HIGHLIGHT = "#d4e8d0";
 
+
 interface ProjectMapProps {
   projects: Project[];
 }
@@ -55,7 +56,10 @@ export function ProjectMap({ projects }: ProjectMapProps) {
   const [legendOpen, setLegendOpen] = useState(false);
   const [mapInteracted, setMapInteracted] = useState(false);
 
-  const mappableProjects = projects.filter((p) => p.lat && p.lng);
+  const visibleProjects = projects.filter((p) => p.publicVisible !== false);
+  const portfolioCompleted = visibleProjects.filter((p) => p.status === "completed").length;
+  const portfolioActive = visibleProjects.filter((p) => p.status === "active").length;
+  const mappableProjects = visibleProjects.filter((p) => p.lat != null && p.lng != null);
 
   const filteredProjects = mappableProjects.filter((p) => {
     const matchesStatus =
@@ -72,7 +76,7 @@ export function ProjectMap({ projects }: ProjectMapProps) {
   const completedCount = mappableProjects.filter((p) => p.status === "completed").length;
   const activeCount = mappableProjects.filter((p) => p.status === "active").length;
   const countries = new Set(mappableProjects.map((p) => p.country).filter(Boolean)).size;
-  const years = projects.filter((p) => p.startYear).map((p) => p.startYear!);
+  const years = visibleProjects.filter((p) => p.startYear).map((p) => p.startYear!);
   const yearRange = years.length
     ? `${Math.min(...years)}\u2013Present`
     : "";
@@ -579,7 +583,7 @@ export function ProjectMap({ projects }: ProjectMapProps) {
           >
             <div>
               <span style={{ fontWeight: 700, fontSize: "18px", color: "#374859" }}>
-                {completedCount}
+                {portfolioCompleted}
               </span>
               <span style={{ fontSize: "11px", color: "#999", marginLeft: "4px" }}>
                 Completed
@@ -591,7 +595,7 @@ export function ProjectMap({ projects }: ProjectMapProps) {
             />
             <div>
               <span style={{ fontWeight: 700, fontSize: "18px", color: "#374859" }}>
-                {activeCount}
+                {portfolioActive}
               </span>
               <span style={{ fontSize: "11px", color: "#999", marginLeft: "4px" }}>
                 Active

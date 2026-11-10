@@ -4,7 +4,7 @@ import { Project } from "@/lib/types";
 import { enrichProjectsWithImages } from "@/lib/projectImages";
 
 export default function Home() {
-  const projects = enrichProjectsWithImages(projectData as Project[]);
+  const projects = enrichProjectsWithImages((projectData as Project[]).filter(p => p.publicVisible !== false));
 
   return <ProjectMap projects={projects} />;
 }

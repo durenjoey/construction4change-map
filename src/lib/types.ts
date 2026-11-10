@@ -10,6 +10,8 @@ export interface Project {
   startYear: number | null;
   endYear: number | null;
   status: "completed" | "active";
+  /** Omit hidden records from every public view without deleting history. */
+  publicVisible?: boolean;
   imageUrl?: string | null;
   imageUrls?: string[];
 }

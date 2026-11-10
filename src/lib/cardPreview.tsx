@@ -4,7 +4,7 @@ import { enrichProjectsWithImages } from "@/lib/projectImages";
 
 /** The demo project used across the card preview pages (has a photo). */
 export function getDemoProject(): Project {
-  const projects = enrichProjectsWithImages(projectData as Project[]);
+  const projects = enrichProjectsWithImages((projectData as Project[]).filter(p => p.publicVisible !== false));
   return { ...projects.find((p) => p.id === "121")! };
 }
 

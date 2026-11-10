@@ -1687,7 +1687,8 @@
     "details": "School, residential",
     "startYear": 2023,
     "endYear": null,
-    "status": "active"
+    "status": "active",
+    "publicVisible": false
   },
   {
     "id": "A5",
@@ -1739,7 +1740,7 @@
     "details": "Remodel of a school for kids with Autism in Redmond, WA",
     "startYear": 2025,
     "endYear": null,
-    "status": "active"
+    "status": "completed"
   },
   {
     "id": "A9",
@@ -1752,7 +1753,7 @@
     "details": "Construction of Kitchen at Macecall Home for World's Children",
     "startYear": 2026,
     "endYear": null,
-    "status": "active"
+    "status": "completed"
   },
   {
     "id": "A10",
@@ -1830,7 +1831,7 @@
     "details": "Construction of a Boundary Wall around the JPSS School",
     "startYear": 2026,
     "endYear": null,
-    "status": "active"
+    "status": "completed"
   },
   {
     "id": "A16",
