@@ -19,7 +19,9 @@ export function formatYear(props: Record<string, any>): string {
       ? props.startYear === props.endYear
         ? `${props.startYear}`
         : `${props.startYear}–${props.endYear}`
-      : `${props.startYear}–Present`
+      : props.status === "completed"
+        ? `${props.startYear}`
+        : `${props.startYear}–Present`
     : "";
 }
 
