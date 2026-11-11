@@ -1739,8 +1739,9 @@
     "type": "Education",
     "details": "Remodel of a school for kids with Autism in Redmond, WA",
     "startYear": 2025,
-    "endYear": null,
-    "status": "completed"
+    "endYear": 2026,
+    "status": "completed",
+    "endMonth": 7
   },
   {
     "id": "A9",
@@ -1752,8 +1753,9 @@
     "type": "WASH",
     "details": "Construction of Kitchen at Macecall Home for World's Children",
     "startYear": 2026,
-    "endYear": null,
-    "status": "completed"
+    "endYear": 2026,
+    "status": "completed",
+    "endMonth": 10
   },
   {
     "id": "A10",
@@ -1830,8 +1832,9 @@
     "type": "Education",
     "details": "Construction of a Boundary Wall around the JPSS School",
     "startYear": 2026,
-    "endYear": null,
-    "status": "completed"
+    "endYear": 2026,
+    "status": "completed",
+    "endMonth": 8
   },
   {
     "id": "A16",
@@ -1845,5 +1848,19 @@
     "startYear": 2026,
     "endYear": null,
     "status": "active"
+  },
+  {
+    "id": "A18",
+    "partner": "NAMA Health Impact - Maternity Operating Theatre",
+    "country": "Uganda",
+    "city": "Nama, Mukono District",
+    "lat": 0.40901,
+    "lng": 32.76994,
+    "type": "Healthcare",
+    "details": "Operating theater for C-sections and complications in labor and delivery at Nama Wellness's maternal health center",
+    "startYear": 2026,
+    "endYear": null,
+    "status": "active",
+    "website": "https://namahealth.org"
   }
 ]

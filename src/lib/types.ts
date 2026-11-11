@@ -9,6 +9,10 @@ export interface Project {
   details: string | null;
   startYear: number | null;
   endYear: number | null;
+  /** Completion month, 1-12. Stored only; lists and popups show years. */
+  endMonth?: number | null;
+  /** Partner site. Shown on active projects only. */
+  website?: string | null;
   status: "completed" | "active";
   /** Omit hidden records from every public view without deleting history. */
   publicVisible?: boolean;

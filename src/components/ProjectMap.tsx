@@ -102,6 +102,7 @@ export function ProjectMap({ projects }: ProjectMapProps) {
             startYear: p.startYear || 0,
             endYear: p.endYear || 0,
             status: p.status || "completed",
+            website: p.website || "",
             imageUrl: p.imageUrl || "",
             // Mapbox stringifies array properties, so join here and split in the popup builder.
             imageUrls: (p.imageUrls || []).join("|"),

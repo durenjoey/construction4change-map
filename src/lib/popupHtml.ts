@@ -6,7 +6,7 @@
  * live Mapbox popup via innerHTML. All untrusted values go through
  * escapeHtml / safeImageSrc.
  */
-import { escapeHtml, safeImageSrc } from "@/lib/security";
+import { escapeHtml, safeHttpsUrl, safeImageSrc } from "@/lib/security";
 
 export const PIN_COLORS = {
   active: "#901a1d",
@@ -36,6 +36,7 @@ export function buildPinnedPopupHTML(
   const statusLabel = isActive ? "Active" : "Completed";
   const yr = formatYear(props);
   const location = [props.city, props.country].filter(Boolean).join(", ");
+  const website = isActive ? safeHttpsUrl(props.website) : null;
   // imageUrls arrives pipe-joined from Mapbox feature properties (arrays get
   // stringified), or as a real array when rendered server-side.
   const rawList: string[] = Array.isArray(props.imageUrls)
@@ -103,6 +104,7 @@ export function buildPinnedPopupHTML(
       <div style="padding:14px 16px">
         <div style="font-weight:700;font-size:16px;color:#374859;line-height:1.3">${escapeHtml(props.partner)}</div>
         ${props.details ? `<div style="font-size:13px;color:#666;margin-top:6px;line-height:1.4">${escapeHtml(props.details)}</div>` : ""}
+        ${website ? `<a href="${escapeHtml(website)}" target="_blank" rel="noopener" style="display:inline-block;margin-top:6px;font-size:12px;font-weight:600;color:#901a1d;text-decoration:underline">Website</a>` : ""}
         <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
           ${location ? `
           <div style="background:#f8f7f4;border-radius:6px;padding:8px 10px">
