@@ -1850,6 +1850,21 @@
     "status": "active"
   },
   {
+    "id": "A17",
+    "partner": "The More We Love",
+    "country": "USA",
+    "city": "King County, WA",
+    "lat": 47.67654,
+    "lng": -122.20708,
+    "type": "Housing",
+    "details": "Hotel-based emergency shelter and support services for women and children",
+    "startYear": 2026,
+    "endYear": null,
+    "status": "active",
+    "endMonth": null,
+    "website": "https://www.themorewelove.org"
+  },
+  {
     "id": "A18",
     "partner": "NAMA Health Impact - Maternity Operating Theater",
     "country": "Uganda",
