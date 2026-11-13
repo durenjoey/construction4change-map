@@ -20,6 +20,8 @@ export interface Project {
   imageUrls?: string[];
   /** Alt text per photo, parallel to imageUrls. Empty means use the project name. */
   imageAlts?: string[];
+  /** Short caption shown on a photo, parallel to imageUrls. Empty means none. */
+  imageCaptions?: string[];
 }
 
 export const PROJECT_TYPES = [

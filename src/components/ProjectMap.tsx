@@ -107,6 +107,7 @@ export function ProjectMap({ projects }: ProjectMapProps) {
             // Mapbox stringifies array properties, so join here and split in the popup builder.
             imageUrls: (p.imageUrls || []).join("|"),
             imageAlts: (p.imageAlts || []).join("|"),
+            imageCaptions: (p.imageCaptions || []).join("|"),
             color: p.status === "active" ? PIN_COLORS.active : PIN_COLORS.completed,
           },
         })),

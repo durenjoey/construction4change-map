@@ -48,15 +48,22 @@ export function buildPinnedPopupHTML(
     : String(props.imageAlts || "").split("|");
   const altAt = (i: number) =>
     String(rawAlts[i] || "").replace(/\|/g, " ").trim() || String(props.partner ?? "").replace(/\|/g, " ");
+  // imageCaptions is parallel too. A caption is a short label shown on the photo, such as "Project site".
+  const rawCaps: string[] = Array.isArray(props.imageCaptions)
+    ? props.imageCaptions
+    : String(props.imageCaptions || "").split("|");
+  const capAt = (i: number) => String(rawCaps[i] || "").replace(/\|/g, " ").trim();
   const photos = rawList
-    .map((u, i) => ({ src: safeImageSrc(u), alt: altAt(i) }))
-    .filter((p): p is { src: string; alt: string } => Boolean(p.src));
+    .map((u, i) => ({ src: safeImageSrc(u), alt: altAt(i), cap: capAt(i) }))
+    .filter((p): p is { src: string; alt: string; cap: string } => Boolean(p.src));
   if (!photos.length) {
     const single = safeImageSrc(props.imageUrl);
-    if (single) photos.push({ src: single, alt: altAt(0) });
+    if (single) photos.push({ src: single, alt: altAt(0), cap: capAt(0) });
   }
   const images = photos.map((p) => p.src);
   const alts = photos.map((p) => p.alt);
+  const caps = photos.map((p) => p.cap);
+  const hasCaps = caps.some(Boolean);
 
   // Inline handlers: popup HTML is injected via innerHTML, so navigation has
   // to live on the elements themselves (same pattern as the list popup hover).
@@ -65,6 +72,7 @@ export function buildPinnedPopupHTML(
     `var i=(parseInt(c.getAttribute('data-i'),10)+(${dir})+a.length)%a.length;` +
     `c.setAttribute('data-i',String(i));var m=c.querySelector('img');m.src=a[i];` +
     `m.alt=(c.getAttribute('data-alts')||'').split('|')[i]||'';` +
+    `var k=c.querySelector('[data-cap]');if(k){var t=(c.getAttribute('data-caps')||'').split('|')[i]||'';k.textContent=t;k.style.display=t?'inline-block':'none'}` +
     `var d=c.querySelectorAll('[data-dot]');for(var j=0;j&lt;d.length;j++){d[j].style.opacity=(j===i)?'1':'0.45'}`;
   const arrowStyle =
     "position:absolute;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:9999px;border:none;cursor:pointer;background:rgba(20,28,36,0.55);color:white;font-size:13px;line-height:26px;text-align:center;padding:0";
@@ -91,11 +99,12 @@ export function buildPinnedPopupHTML(
     : "";
 
   const imageSection = images.length
-    ? `<div data-imgs="${escapeHtml(images.join("|"))}" data-alts="${escapeHtml(alts.join("|"))}" data-i="0" style="height:160px;position:relative">
+    ? `<div data-imgs="${escapeHtml(images.join("|"))}" data-alts="${escapeHtml(alts.join("|"))}"${hasCaps ? ` data-caps="${escapeHtml(caps.join("|"))}"` : ""} data-i="0" style="height:160px;position:relative">
         <img src="${escapeHtml(images[0])}" alt="${escapeHtml(alts[0])}" style="width:100%;height:100%;object-fit:cover" />
         <div style="position:absolute;top:10px;right:10px">
           <span style="display:inline-block;font-size:10px;padding:3px 10px;border-radius:9999px;color:white;background:${statusColor};font-weight:600">${statusLabel}</span>
         </div>
+        ${hasCaps ? `<span data-cap style="position:absolute;left:10px;bottom:10px;display:${caps[0] ? "inline-block" : "none"};font-size:10px;padding:3px 10px;border-radius:9999px;color:white;background:rgba(20,28,36,0.6);font-weight:600">${escapeHtml(caps[0])}</span>` : ""}
         ${slideshowControls}
         ${backButton}
       </div>`
