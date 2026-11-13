@@ -42,20 +42,29 @@ export function buildPinnedPopupHTML(
   const rawList: string[] = Array.isArray(props.imageUrls)
     ? props.imageUrls
     : String(props.imageUrls || "").split("|");
-  const images = rawList
-    .map((u) => safeImageSrc(u))
-    .filter((u): u is string => Boolean(u));
-  if (!images.length) {
+  // imageAlts runs parallel to imageUrls. A photo without its own alt uses the project name.
+  const rawAlts: string[] = Array.isArray(props.imageAlts)
+    ? props.imageAlts
+    : String(props.imageAlts || "").split("|");
+  const altAt = (i: number) =>
+    String(rawAlts[i] || "").replace(/\|/g, " ").trim() || String(props.partner ?? "").replace(/\|/g, " ");
+  const photos = rawList
+    .map((u, i) => ({ src: safeImageSrc(u), alt: altAt(i) }))
+    .filter((p): p is { src: string; alt: string } => Boolean(p.src));
+  if (!photos.length) {
     const single = safeImageSrc(props.imageUrl);
-    if (single) images.push(single);
+    if (single) photos.push({ src: single, alt: altAt(0) });
   }
+  const images = photos.map((p) => p.src);
+  const alts = photos.map((p) => p.alt);
 
   // Inline handlers: popup HTML is injected via innerHTML, so navigation has
   // to live on the elements themselves (same pattern as the list popup hover).
   const stepJs = (dir: number) =>
     `var c=this.closest('[data-imgs]');var a=c.getAttribute('data-imgs').split('|');` +
     `var i=(parseInt(c.getAttribute('data-i'),10)+(${dir})+a.length)%a.length;` +
-    `c.setAttribute('data-i',String(i));c.querySelector('img').src=a[i];` +
+    `c.setAttribute('data-i',String(i));var m=c.querySelector('img');m.src=a[i];` +
+    `m.alt=(c.getAttribute('data-alts')||'').split('|')[i]||'';` +
     `var d=c.querySelectorAll('[data-dot]');for(var j=0;j&lt;d.length;j++){d[j].style.opacity=(j===i)?'1':'0.45'}`;
   const arrowStyle =
     "position:absolute;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:9999px;border:none;cursor:pointer;background:rgba(20,28,36,0.55);color:white;font-size:13px;line-height:26px;text-align:center;padding:0";
@@ -82,8 +91,8 @@ export function buildPinnedPopupHTML(
     : "";
 
   const imageSection = images.length
-    ? `<div data-imgs="${escapeHtml(images.join("|"))}" data-i="0" style="height:160px;position:relative">
-        <img src="${escapeHtml(images[0])}" alt="${escapeHtml(props.partner)}" style="width:100%;height:100%;object-fit:cover" />
+    ? `<div data-imgs="${escapeHtml(images.join("|"))}" data-alts="${escapeHtml(alts.join("|"))}" data-i="0" style="height:160px;position:relative">
+        <img src="${escapeHtml(images[0])}" alt="${escapeHtml(alts[0])}" style="width:100%;height:100%;object-fit:cover" />
         <div style="position:absolute;top:10px;right:10px">
           <span style="display:inline-block;font-size:10px;padding:3px 10px;border-radius:9999px;color:white;background:${statusColor};font-weight:600">${statusLabel}</span>
         </div>
@@ -135,8 +144,12 @@ export function buildMultiPopupListHTML(propsList: Record<string, any>[]): strin
       const statusColor = isActive ? PIN_COLORS.active : PIN_COLORS.completed;
       const statusLabel = isActive ? "Active" : "Completed";
       const thumb = safeImageSrc(p.imageUrl);
+      // The thumbnail is the cover photo, so it takes the first alt when there is one.
+      const thumbAlt =
+        String((Array.isArray(p.imageAlts) ? p.imageAlts[0] : String(p.imageAlts || "").split("|")[0]) || "").trim() ||
+        String(p.partner ?? "");
       const thumbHtml = thumb
-        ? `<img src="${escapeHtml(thumb)}" alt="${escapeHtml(p.partner)}" style="width:48px;height:48px;border-radius:6px;object-fit:cover;flex-shrink:0" />`
+        ? `<img src="${escapeHtml(thumb)}" alt="${escapeHtml(thumbAlt)}" style="width:48px;height:48px;border-radius:6px;object-fit:cover;flex-shrink:0" />`
         : `<div style="width:48px;height:48px;border-radius:6px;flex-shrink:0;background:${statusColor};opacity:0.15"></div>`;
       return `
       <div data-project-idx="${i}" style="padding:10px 14px;border-bottom:1px solid #eee;cursor:pointer;transition:background 0.15s;display:flex;gap:10px;align-items:flex-start" onmouseenter="this.style.background='#f8f7f4'" onmouseleave="this.style.background='white'">

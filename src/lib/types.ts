@@ -18,6 +18,8 @@ export interface Project {
   publicVisible?: boolean;
   imageUrl?: string | null;
   imageUrls?: string[];
+  /** Alt text per photo, parallel to imageUrls. Empty means use the project name. */
+  imageAlts?: string[];
 }
 
 export const PROJECT_TYPES = [
